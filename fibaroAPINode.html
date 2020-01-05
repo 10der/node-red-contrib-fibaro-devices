@@ -1,0 +1,90 @@
+<script type="text/javascript">
+    RED.nodes.registerType('fibaroAPI', {
+        category: 'FIBARO',
+        color: '#FFCC66',
+        defaults: {
+            name: { value: "" },
+            server: { type: "fibaro-server", required: true },
+            output_topic: { value: "" },
+            globals_topic: { value: "" },
+            room_mode: { value: false },
+            pollingInterval: { value: "1000", validate: function (v) { return ((v === undefined) || (/^\d+$/).test(v)); } },
+            events: { value: false },
+            outputs: { value: 0 } // Standard field that will be used by Node-Red to draw N output ports in the flow editor
+        },
+        inputs: 1,
+        outputs: 0,
+        icon: "fibaro-hc2.png",
+        label: function () {
+            return this.name || "fibaroAPI";
+        },
+        oneditprepare: function () {
+            var node = this;
+            if (!$("#node-input-pollingInterval").val()) {
+                $("#node-input-pollingInterval").val(1000);
+            }
+            $("#node-input-pollingInterval").spinner({ min: 500, max: 5000 });
+        },
+        oneditsave: function () {
+            var node = this;
+            if ($("#node-input-events").is(':checked')) {
+                node.outputs = 2;
+            } else {
+                node.outputs = 0;
+            }
+            
+            if (!$("#node-input-pollingInterval").val()) {
+                $("#node-input-pollingInterval").val(1000);
+            }
+
+            if ($("#node-input-pollingInterval").val() < 500) {
+                $("#node-input-pollingInterval").val(500);
+            }
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="fibaroAPI">
+
+    <div class="form-row">
+        <label for="node-input-server"><i class="icon-tag"></i> HC2 Server</label>
+        <input type="text" id="node-input-server" placeholder="">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-bookmark"></i> Name</label>
+        <input type="text" id="node-input-name" style="width:60%;" placeholder="FIBARO API"/>
+    </div>
+      
+    <div class="form-row">
+        <label for="node-input-pollingInterval"><i class="fa fa-clock-o"></i> Polling interval</label>
+        <input type="text" id="node-input-pollingInterval" placeholder="Duration" style="text-align:end; width:50px !important">
+        milliseconds
+    </div>
+
+    <div class="form-row">
+        <input type="text" id="node-input-output_topic" placeholder="home/status">
+        <label for="node-input-output_topic"><i class="fa fa-tasks"></i> Topic status </label>        
+    </div>
+
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-room_mode" style="display:inline-block; width: auto; vertical-align:baseline;">
+        <label for="node-input-room_mode" style="width: 70%;">Enable room mode</label>
+    </div>
+
+    <div class="form-row">
+        <input type="text" id="node-input-globals_topic" placeholder="home/globalVariables">
+        <label for="node-input-globals_topic"><i class="fa fa-tasks"></i> Topic globs </label>        
+    </div>
+
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-events" style="display:inline-block; width: auto; vertical-align:baseline;">
+        <label for="node-input-events" style="width: 70%;">Events passthrough & response output</label>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="fibaroAPI">
+    <p>Fibaro API node </p>
+</script>

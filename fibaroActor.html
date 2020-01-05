@@ -1,0 +1,129 @@
+<script type="text/javascript">
+    RED.nodes.registerType('fibaroActor', {
+        category: 'FIBARO',
+        color: "GoldenRod",
+        defaults: {
+            name: { value: "" },
+            deviceID: { value: "", required: true },
+            server: { type: "fibaro-server", required: true },
+            events: { value: false },
+            payload: {
+                value: null, validate: function (v) {
+                    if (!v) return true;
+                    try {
+                        JSON.parse(v);
+                        return true;
+                    } catch (err) {
+                        return false;
+                    }
+                }
+            },
+            outputs: { value: 0 } // Standard field that will be used by Node-Red to draw N output ports in the flow editor
+        },
+        inputs: 1,
+        outputs: 0,
+        icon: "fibaro-hc2.png",
+        label: function () {
+            return this.name || "fibaroActor";
+        },
+        oneditprepare: function () {
+            var node = this;
+
+            $("#node-input-payload").typedInput({
+                default: 'json',
+                typeField: 'json',
+                types: ['json']
+            });
+
+            $("#node-input-payload").typedInput('type', 'json');
+
+            try {
+                $("#node-input-name").autocomplete("destroy");
+            } catch (err) { }
+
+            $("#node-input-controlled").change(function () {
+                if ($("#node-input-controlled").prop("checked")) {
+                    $("#command-topic-row").show();
+                } else {
+                    $("#command-topic-row").hide();
+                }
+            });
+
+            $("#node-lookup-name").click(function () {
+                $("#node-lookup-name-icon").removeClass('fa-search');
+                $("#node-lookup-name-icon").addClass('spinner');
+                $("#node-lookup-name").addClass('disabled');
+
+                var endPoint = $("#node-input-server :selected").text();
+                $.getJSON(endPoint + "/devices", function (data) {
+                    var search = [];
+                    $.each(data, function (i, item) {
+                        search.push(item);
+                    });
+                    $("#node-input-name").autocomplete({
+                        source: search,
+                        minLength: 0,
+                        select: function (event, ui) {
+                            $(this).val(ui.item.label);
+                            $("#node-input-deviceID").val(ui.item.value);
+                            return false;
+                        },
+                        change: function (event, ui) {
+                        },
+                        close: function (event, ui) {
+                            $("#node-input-name").autocomplete("destroy");
+                        }
+                    }).autocomplete("search", $("#node-input-name").val());
+                })
+                    .fail(function () {
+                        console.log("error");
+                    })
+                    .always(function () {
+                        $("#node-lookup-name-icon").addClass('fa-search');
+                        $("#node-lookup-name-icon").removeClass('spinner');
+                        $("#node-lookup-name").removeClass('disabled');
+                    });
+            });
+        },
+        oneditsave: function () {
+            var node = this;
+            if ($("#node-input-events").is(':checked')) {
+                node.outputs = 1;
+            } else {
+                node.outputs = 0;
+            }
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="fibaroActor">
+    <div class="form-row">
+        <label for="node-input-server"><i class="icon-tag"></i> HC2 Server</label>
+        <input type="text" id="node-input-server" placeholder="">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-bookmark"></i> Name</label>
+        <input type="text" id="node-input-name" style="width:60%;" placeholder="garage light sensor"/>
+        <a id="node-lookup-name" class="btn"><i id="node-lookup-name-icon" class="fa fa-search"></i></a>
+    </div>
+   
+    <div class="form-row">
+        <label for="node-input-deviceID"><i class="icon-tag"></i> Device ID</label>
+        <input type="text" id="node-input-deviceID">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-payload"><i class="fa fa-envelope"></i> Custom</label>
+        <input type="text" id="node-input-payload" style="width:70%">
+    </div>
+
+    <div class="form-row">
+        <input type="checkbox" id="node-input-events" style="display:inline-block; width: auto; vertical-align:baseline;">
+        <label for="node-input-events" style="width: 70%;">Events passthrough</label>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="fibaroActor">
+    <p>A simple fibaroActor node </p>
+</script>

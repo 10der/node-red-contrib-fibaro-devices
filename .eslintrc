@@ -1,0 +1,17 @@
+{
+  "extends": [
+    "eslint:recommended",
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module",
+    "ecmaFeatures": {
+    }
+  },
+  "rules": {
+    "no-console": "off"
+  },
+  "env": {
+    "node": true
+  }
+}
