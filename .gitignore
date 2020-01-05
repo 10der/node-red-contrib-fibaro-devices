@@ -104,4 +104,4 @@ dist
 .tern-port
 
 # windows must die
-.cmd
+*.cmd
