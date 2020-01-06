@@ -9,9 +9,6 @@
     "eslint-plugin-jsx-a11y": "^6.1.2",
     "eslint-plugin-node": "^8.0.0"
   },
-  "engines": {
-    "node": "0.10.20"
-  },
   "scripts": {
     "lint": "eslint -c .eslintrc ./"
   },
