@@ -21,9 +21,11 @@
   "node-red": {
     "nodes": {
       "fibaroServer": "fibaroServer.js",
+      "fibaroQueryState": "fibaroQueryState.js",
       "fibaroAPINode": "fibaroAPINode.js",
       "fibaroSensor": "fibaroSensor.js",
-      "fibaroActor": "fibaroActor.js"
+      "fibaroActor": "fibaroActor.js",
+      "fibaroCustomActor": "fibaroCustomActor.js"
     }
   },
   "license": "MIT"

@@ -1,0 +1,33 @@
+<script type="text/javascript">
+    RED.nodes.registerType('fibaroQuery', {
+        category: 'FIBARO',
+        defaults: {
+            name: { value: "" },
+            server: { type: "fibaro-server", required: true },
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "fibaro-hc2.png",
+        label: function () {
+            return this.name || "fibaroQuery";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="fibaroQuery">
+
+    <div class="form-row">
+        <label for="node-input-server"><i class="icon-tag"></i> HC2 Server</label>
+        <input type="text" id="node-input-server" placeholder="">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+
+</script>
+
+<script type="text/html" data-help-name="fibaroQuery">
+    <p>fibaroQuery</p>
+</script>

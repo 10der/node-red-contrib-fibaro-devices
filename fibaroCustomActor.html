@@ -1,5 +1,5 @@
 <script type="text/javascript">
-    RED.nodes.registerType('fibaroActor', {
+    RED.nodes.registerType('fibaroXActor', {
         category: 'FIBARO',
         color: "GoldenRod",
         defaults: {
@@ -7,13 +7,24 @@
             deviceID: { value: "0", required: true },
             server: { type: "fibaro-server", required: true },
             events: { value: false },
+            payload: {
+                value: "{}", validate: function (v) {
+                    if (!v) return true;
+                    try {
+                        JSON.parse(v);
+                        return true;
+                    } catch (err) {
+                        return false;
+                    }
+                }
+            },
             outputs: { value: 0 } // Standard field that will be used by Node-Red to draw N output ports in the flow editor
         },
         inputs: 1,
         outputs: 0,
         icon: "fibaro-hc2.png",
         label: function () {
-            return this.name || "fibaroActor";
+            return this.name || "fibaroXActor";
         },
         oneditprepare: function () {
             var node = this;
@@ -84,7 +95,7 @@
     });
 </script>
 
-<script type="text/x-red" data-template-name="fibaroActor">
+<script type="text/x-red" data-template-name="fibaroXActor">
     <div class="form-row">
         <label for="node-input-server"><i class="icon-tag"></i> HC2 Server</label>
         <input type="text" id="node-input-server" placeholder="">
@@ -106,8 +117,13 @@
         <label for="node-input-events" style="width: 70%;">Events passthrough</label>
     </div>
 
+    <div class="form-row">
+        <label for="node-input-payload"><i class="fa fa-envelope"></i> Actions</label>
+        <input type="text" id="node-input-payload" style="width:70%">
+    </div>
+
 </script>
 
-<script type="text/x-red" data-help-name="fibaroActor">
-    <p>A simple fibaroActor node </p>
+<script type="text/x-red" data-help-name="fibaroXActor">
+    <p>A simple fibaroXActor node </p>
 </script>
