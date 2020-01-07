@@ -12,7 +12,10 @@
   "scripts": {
     "lint": "eslint -c .eslintrc ./"
   },
-  "repository": {},
+    "repository": {
+    "type": "git",
+    "url": "git+https://github.com/10der/node-red-contrib-fibaro-devices.git"
+  },
   "author": "Oleg Denisenko <oleg.denisenko@gmail.com>",
   "keywords": [
     "node-red",
