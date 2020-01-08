@@ -21,9 +21,14 @@
         oneditprepare: function () {
             var node = this;
             if (!$("#node-input-pollingInterval").val()) {
-                $("#node-input-pollingInterval").val(1000);
+                $("#node-input-pollingInterval").val(1);
             }
-            $("#node-input-pollingInterval").spinner({ min: 500, max: 5000 });
+
+            if ($("#node-input-pollingInterval").val() > 10) {
+                $("#node-input-pollingInterval").val(1);
+            }
+
+            $("#node-input-pollingInterval").spinner({ min: 0, max: 10 });
         },
         oneditsave: function () {
             var node = this;
@@ -34,11 +39,7 @@
             }
             
             if (!$("#node-input-pollingInterval").val()) {
-                $("#node-input-pollingInterval").val(1000);
-            }
-
-            if ($("#node-input-pollingInterval").val() < 500) {
-                $("#node-input-pollingInterval").val(500);
+                $("#node-input-pollingInterval").val(1);
             }
         }
     });
@@ -59,7 +60,7 @@
     <div class="form-row">
         <label for="node-input-pollingInterval"><i class="fa fa-clock-o"></i> Polling interval</label>
         <input type="text" id="node-input-pollingInterval" placeholder="Duration" style="text-align:end; width:50px !important">
-        milliseconds
+        seconds
     </div>
 
     <div class="form-row">

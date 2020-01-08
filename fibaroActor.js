@@ -28,6 +28,7 @@ module.exports = function (RED) {
                         var event = {};
                         event.topic = msg.topic;
                         event.payload = JSON.parse(msg.payload);
+                        event.passthrough = true; // mark message
                         node.send([event]);
                     } catch (e) {
                         // Ignore malformed
@@ -37,6 +38,9 @@ module.exports = function (RED) {
         });
 
         node.on('input', function (msg) {
+            // it's my own message
+            if (msg.passthrough) return;
+
             node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
             setTimeout(() => {
                 node.status({});

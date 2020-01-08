@@ -11,7 +11,12 @@ module.exports = function (RED) {
         config.output_topic = config.output_topic || "home/status";
         config.room_mode = config.room_mode || false;
         config.globals_topic = config.globals_topic || "home/globalVariables";
-        config.pollingInterval = config.pollingInterval || 1000;        
+
+        const defaultPollerPeriod = 1;
+        let pollerPeriod = config.pollingInterval ? parseInt(config.pollingInterval) : defaultPollerPeriod;
+        if (isNaN(pollerPeriod) || pollerPeriod < 0 || pollerPeriod > 10) {
+            pollerPeriod = defaultPollerPeriod;
+        }
 
         // Fibaro API evensts
         fibaro.on('connected', function () {
@@ -75,9 +80,11 @@ module.exports = function (RED) {
         node.status({});
         fibaro.init(this.serverConfig, config);
 
-        this.poller = setInterval(function () { poll(initialization); initialization = false; }, config.pollingInterval);
+        if (pollerPeriod != 0) {
+            this.poller = setInterval(function () { poll(initialization); initialization = false; }, pollerPeriod * 1000);
+        }
         this.on("close", function () {
-            if (this.poll) { clearTimeout(this.poll); }
+            if (this.poller) { clearTimeout(this.poller); }
         });
     }
     RED.nodes.registerType("fibaroAPI", FibaroAPINode);
