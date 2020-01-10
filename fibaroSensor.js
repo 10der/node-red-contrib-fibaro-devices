@@ -8,22 +8,21 @@ module.exports = function (RED) {
 
         fibaro.on('event', function (msg) {
             if (MyMessage(msg, n.deviceID)) {
+                // console.debug(msg);                
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
                 setTimeout(() => {
                     node.status({});
                 }, 1000);
 
-                try {
-                    var event = {};
-                    event.topic = msg.topic;
-                    event.payload = JSON.parse(msg.payload);
-                    if (typeof event.payload === 'object') {
-                        node.send([null, event]);
-                    } else {
-                        node.send([event, null]);
-                    }
-                } catch (e) {
-                    // Ignore malformed
+                var event = {};
+                event.topic = msg.topic;
+                event.payload = msg.payload;
+                try { event.payload = JSON.parse(event.payload); } // obj
+                catch (e) {/* */ }
+                if (typeof event.payload === 'object') {
+                    node.send([null, event]);
+                } else {
+                    node.send([event, null]);
                 }
             }
         });

@@ -102,12 +102,7 @@ FibaroAPI.prototype.poll = function poll(init) {
 
                             // do it
                             if (event) {
-                                try {
-                                    // console.debug(event);
-                                    _api.emit('event', event);
-                                } catch (e) {
-                                    console.debug(e);
-                                }
+                                _api.emit('event', event);
                             }
                         });
                     }
@@ -117,29 +112,35 @@ FibaroAPI.prototype.poll = function poll(init) {
                 // events
                 if (updates.events != undefined) {
                     updates.events.map((s) => {
-                        if (s.data.property) {
-                            // console.debug(s);
-                            var event = {};
-                            s.data.roomID = this.roomMode ? _api.getRoomByDeviceID(s.data.id) : 0;
-                            event.topic = `${this.output_topic}/${this.roomMode ? `${s.data.roomID}/` : ''}${s.data.id}`;
-                            if (s.data.property == "value") {
-                                event.payload = s.data.newValue;
-                            } else {
-                                event.payload = { property: s.data.property, value: s.data.newValue };
-                            }
-                            // do it
-
-                            if (s.data.id == 725) {
-                                // console.debug(">", event); 
-                            }
-
-                            try {
+                        if (s.type == "DevicePropertyUpdatedEvent") {
+                            if (s.data.property) {
+                                let event = {};
+                                let roomID = this.roomMode ? _api.getRoomByDeviceID(s.data.id) : 0;
+                                event.topic = `${this.output_topic}/${this.roomMode ? `${roomID}/` : ''}${s.data.id}`;
+                                if (s.data.property == "value") {
+                                    event.payload = s.data.newValue;
+                                } else {
+                                    event.payload = { property: s.data.property, value: s.data.newValue };
+                                }
+                                // console.debug(event);
                                 _api.emit('event', event);
-                            } catch (e) {
-                                console.debug(e);
+                            } else {
+                                // why I am here?
+                                console.debug(s);
                             }
+                        }
+                        else if (s.type == "CentralSceneEvent") {
+                            let event = {};
+                            let roomID = this.roomMode ? _api.getRoomByDeviceID(s.data.deviceId) : 0;
+                            event.topic = `${this.output_topic}/${this.roomMode ? `${roomID}/` : ''}${s.data.deviceId}`;
+                            delete s.data.deviceId;
+                            event.payload = { property: s.type, value: s.data };
+                            // console.debug(event);
+                            _api.emit('event', event);
+                        } else if (s.type == "AccessControlEvent") {
+                            // TODO
                         } else {
-                            // console.debug(s);
+                            // unhandled event
                         }
                     });
                 }
