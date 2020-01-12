@@ -14,16 +14,93 @@ var FibaroAPI = function () {
 
 util.inherits(FibaroAPI, events.EventEmitter);
 
+FibaroAPI.prototype.validateConfig = function validateConfig(configNode) {
+    var _api = this;
+
+    if (configNode === undefined || configNode === null) {
+        _api.emit('error', { text: 'please select a config node' });
+        return false;
+    }
+
+    if (configNode.credentials) {
+        // all OK
+    } else {
+        _api.emit('error', { text: 'missing valid credentials in config node' });
+        return false;
+    }
+
+    if (configNode.credentials && configNode.credentials.login) {
+        // all OK
+    } else {
+        _api.emit('error', { text: 'missing login in config node' });
+        return false;
+    }
+
+    if (configNode.credentials && configNode.credentials.password) {
+        // all OK
+    } else {
+        _api.emit('error', { text: 'missing password in config node' });
+        return false;
+    }
+
+    const hasIpAddress = configNode.ipaddress !== undefined && configNode.ipaddress !== null && configNode.ipaddress.trim().length > 5;
+    if (!hasIpAddress) {
+        _api.emit('error', { text: 'missing IP Address in config node' });
+        return false;
+    }
+
+    return true;
+}
+
+FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
+    if (!this.configNode) {
+        if (error) error({ text: "HC API configuration is empty" });
+        return
+    }
+
+    const host = this.configNode.ipaddress;
+    const user = this.configNode.login;
+    const pass = this.configNode.password;
+    // ................................................
+    const url = `http://${host}/api${query}`;
+    const opts = {
+        method: 'GET',
+        url,
+        headers: {}
+    };
+
+    opts.auth = {
+        user,
+        pass,
+        sendImmediately: false,
+    };
+
+    opts.headers.accept = 'application/json, text/plain;q=0.9, */*;q=0.8';
+    //console.debug(opts);
+    request(opts, (err, response, data) => {
+        if (err) {
+            error(err);
+        } else {
+            const { statusCode } = response;
+            if (statusCode === 200 || statusCode === 201 || statusCode === 202) {
+                callback(data);
+            } else {
+                error({ code: statusCode });
+            }
+        }
+    });
+}
+
 FibaroAPI.prototype.fibaroInit = function fibaroInit(callback, error) {
     var _api = this;
 
     // getting rooms
-    _api.sendRequest(this.configNode, '/rooms',
+    _api.sendRequest('/rooms',
         (data) => {
             try {
                 this.rooms = JSON.parse(data);
                 // getting devices
-                _api.sendRequest(this.configNode, '/devices',
+                _api.sendRequest('/devices',
                     (data) => {
                         try {
                             this.devices = JSON.parse(data);
@@ -66,7 +143,7 @@ FibaroAPI.prototype.poll = function poll(init) {
     }
 
     if (init) this.lastPoll = 1;
-    _api.sendRequest(this.configNode, `/refreshStates?last=${this.lastPoll}`,
+    _api.sendRequest(`/refreshStates?last=${this.lastPoll}`,
         (data) => {
             try {
                 var updates = JSON.parse(data);
@@ -117,6 +194,10 @@ FibaroAPI.prototype.poll = function poll(init) {
 }
 
 FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
+    if (!this.configNode) {
+        // HC is not configured
+        return
+    }
     var _api = this;
 
     let q = new URLSearchParams(args).toString();
@@ -125,7 +206,7 @@ FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
         url = url + "?" + q;
     }
     // console.debug(url);
-    _api.sendRequest(this.configNode, url,
+    _api.sendRequest(url,
         (data) => {
             var msg = {};
             msg.topic = url;
@@ -138,47 +219,10 @@ FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
         });
 }
 
-FibaroAPI.prototype.validateConfig = function validateConfig(configNode) {
-    var _api = this;
-    if (configNode === undefined || configNode === null) {
-        _api.emit('error', { text: 'please select a config node' });
-        return false;
-    }
-
-    if (configNode.credentials) {
-        // all OK
-    } else {
-        _api.emit('error', { text: 'missing valid credentials in config node' });
-        return false;
-    }
-
-    if (configNode.credentials && configNode.credentials.login) {
-        // all OK
-    } else {
-        _api.emit('error', { text: 'missing login in config node' });
-        return false;
-    }
-
-    if (configNode.credentials && configNode.credentials.password) {
-        // all OK
-    } else {
-        _api.emit('error', { text: 'missing password in config node' });
-        return false;
-    }
-
-    const hasIpAddress = configNode.ipaddress !== undefined && configNode.ipaddress !== null && configNode.ipaddress.trim().length > 5;
-    if (!hasIpAddress) {
-        _api.emit('error', { text: 'missing IP Address in config node' });
-        return false;
-    }
-
-    return true;
-}
-
-FibaroAPI.prototype.queryState = function queryState(deviceID, property, callback) {
+FibaroAPI.prototype.queryState = function queryState(deviceID, property, callback, error) {
     var _api = this;
     // /api/devices/969/properties/value
-    _api.sendRequest(this.configNode, `/devices/${deviceID}/properties/${property}`,
+    _api.sendRequest(`/devices/${deviceID}/properties/${property}`,
         (data) => {
             var payload = JSON.parse(data);
             try {
@@ -186,9 +230,12 @@ FibaroAPI.prototype.queryState = function queryState(deviceID, property, callbac
                     callback(payload);
                 }
             } catch (e) {
+                if (error) error(e)
                 console.debug(e);
             }
-        }, (error) => { console.debug(error) });
+        }, (e) => {
+            if (error) error(e)
+        });
 }
 
 FibaroAPI.prototype.getRoomByDeviceID = function getRoomByDeviceID(deviceID) {
@@ -197,40 +244,6 @@ FibaroAPI.prototype.getRoomByDeviceID = function getRoomByDeviceID(deviceID) {
         return device.roomID;
     }
     return 0;
-}
-
-FibaroAPI.prototype.sendRequest = function sendRequest(config, query, callback, error) {
-    const host = config.ipaddress;
-    const user = config.login;
-    const pass = config.password;
-    // ................................................
-    const url = `http://${host}/api${query}`;
-    const opts = {
-        method: 'GET',
-        url,
-        headers: {}
-    };
-
-    opts.auth = {
-        user,
-        pass,
-        sendImmediately: false,
-    };
-
-    opts.headers.accept = 'application/json, text/plain;q=0.9, */*;q=0.8';
-    //console.debug(opts);
-    request(opts, (err, response, data) => {
-        if (err) {
-            error(err);
-        } else {
-            const { statusCode } = response;
-            if (statusCode === 200 || statusCode === 201 || statusCode === 202) {
-                callback(data);
-            } else {
-                error({ code: statusCode });
-            }
-        }
-    });
 }
 
 module.exports = FibaroAPI;

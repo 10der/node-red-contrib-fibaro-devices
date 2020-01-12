@@ -18,11 +18,11 @@ module.exports = function (RED) {
       const { object } = req.params;
       if (object == 'devices') {
         let rooms = [];
-        fibaro.sendRequest(node, '/rooms',
+        fibaro.sendRequest('/rooms',
           (data) => {
             try {
               rooms = JSON.parse(data);
-              fibaro.sendRequest(node, '/devices',
+              fibaro.sendRequest('/devices',
                 (data) => {
                   try {
                     let devices = JSON.parse(data);
@@ -43,7 +43,7 @@ module.exports = function (RED) {
             }
           }, (error) => { console.debug(error) });
       } else if (object == 'rooms') {
-        fibaro.sendRequest(node, '/rooms',
+        fibaro.sendRequest('/rooms',
           (data) => {
             let jdata;
             try {

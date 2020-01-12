@@ -4,7 +4,8 @@ module.exports = function (RED) {
         this.server = n.server;
         this.serverConfig = RED.nodes.getNode(this.server);
         var node = this;
-        var fibaro = this.serverConfig.client;
+        node.status({});
+        var fibaro = this.serverConfig.client;        
 
         node.on('input', function (msg) {
             if (msg.payload) {
@@ -13,7 +14,8 @@ module.exports = function (RED) {
                 fibaro.queryState(deviceID, property, (currentState) => {
                     msg.currentState = currentState;
                     node.send(msg);
-                });
+                    node.status({});
+                }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
             }
         });
     }

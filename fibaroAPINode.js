@@ -21,7 +21,7 @@ module.exports = function (RED) {
         });
 
         fibaro.on('error', function (error) {
-            node.configured = (error.code != 401);
+            if (node.configured && error.code == 401) node.configured = false;
             node.status({ fill: 'red', shape: 'ring', text: `error: ${error.text}` });
         });
 
