@@ -8,10 +8,6 @@ module.exports = function (RED) {
         var node = this;
         var initialization = true;
 
-        config.output_topic = config.output_topic || "home/status";
-        config.room_mode = config.room_mode || false;
-        config.globals_topic = config.globals_topic || "home/globalVariables";
-
         const defaultPollerPeriod = 1;
         let pollerPeriod = config.pollingInterval ? parseInt(config.pollingInterval) : defaultPollerPeriod;
         if (isNaN(pollerPeriod) || pollerPeriod < 0 || pollerPeriod > 10) {
@@ -21,7 +17,7 @@ module.exports = function (RED) {
         // Fibaro API evensts
         fibaro.on('connected', function () {
             node.configured = true;
-            node.status({ fill: "green", shape: "dot", text: "inited" });
+            node.status({ fill: "green", shape: "dot", text: "connected" });
         });
 
         fibaro.on('error', function (error) {
@@ -30,12 +26,49 @@ module.exports = function (RED) {
         });
 
         // handle all events. just ONLY for user purposes via MQTT! (output #1)
-        fibaro.on('event', function (msg) {
-            node.status({ fill: "green", shape: "dot", text: "OK" });
+        fibaro.on('events', function (msg) {
+            node.status({ fill: "green", shape: "dot", text: "ready" });
             setTimeout(() => {
                 node.status({});
             }, 2000);
-            node.send(msg);
+
+            // internal post handling...
+            var topic = msg.topic;
+            var payload = msg.payload;
+            try {
+                payload = JSON.parse(payload);
+            } catch (e) {
+                // Ignore malformed
+            }
+
+            if (topic == "DevicePropertyUpdatedEvent") {
+                if (payload.property) {
+                    let event = {};
+                    event.topic = `${payload.id}`;
+                    if (payload.property == "value") {
+                        event.payload = payload.newValue;
+                    } else {
+                        event.payload = { property: payload.property, value: payload.newValue };
+                    }
+                    fibaro.emit('event', event);
+                }
+            }
+            else if (topic == "CentralSceneEvent") {
+                let event = {};
+                event.topic = `${payload.deviceId}`;
+                delete payload.deviceId;
+                event.payload = { property: topic, value: payload };
+                // console.debug(event);
+                fibaro.emit('event', event);
+            }
+
+            // var roomMode = config.room_mode || false;
+            // let roomID = 0 ; //roomMode ? fibaro.getRoomByDeviceID(payload.id) : 0;
+
+            // passthrough
+            if (config.outputs > 0) {
+                node.send(msg);
+            }
         });
 
         // custom response data (output #2)
@@ -67,21 +100,24 @@ module.exports = function (RED) {
             }
         });
 
-        var poll = function () {
+        var poll = function (init) {
             if (!node.configured) {
                 node.status({ fill: "red", shape: "dot", text: "NOT CONFIGURED!" });
                 return
             }
-            fibaro.poll();
+            fibaro.poll(init);
         }
 
         // init Fibaro API
         node.configured = false;
         node.status({});
-        fibaro.init(this.serverConfig, config);
+        fibaro.init(this.serverConfig);
 
         if (pollerPeriod != 0) {
-            this.poller = setInterval(function () { poll(initialization); initialization = false; }, pollerPeriod * 1000);
+            this.poller = setInterval(function () {
+                poll(initialization);
+                initialization = false;
+            }, pollerPeriod * 1000);
         }
         this.on("close", function () {
             if (this.poller) { clearTimeout(this.poller); }

@@ -7,35 +7,53 @@ var request = require('request');
 var FibaroAPI = function () {
     this.lastPoll = 1;
     this.configNode = null;
-
-    // custom parameters
-    this.output_topic = "";
-    this.roomMode = false;
-    this.globals_topic = "";
     this.rooms = [];
     this.devices = [];
-
     events.EventEmitter.call(this);
 }
 
 util.inherits(FibaroAPI, events.EventEmitter);
 
-FibaroAPI.prototype.init = function init(HCNode, config) {
+FibaroAPI.prototype.fibaroInit = function fibaroInit(callback, error) {
+    var _api = this;
+
+    // getting rooms
+    _api.sendRequest(this.configNode, '/rooms',
+        (data) => {
+            try {
+                this.rooms = JSON.parse(data);
+                // getting devices
+                _api.sendRequest(this.configNode, '/devices',
+                    (data) => {
+                        try {
+                            this.devices = JSON.parse(data);
+                            if (callback) {
+                                callback();
+                            }
+                        } catch (e) {
+                            if (error) error(e);
+                        }
+                    }, (e) => { if (error) error(e); });
+            } catch (e) {
+                if (error) error(e);
+            }
+        }, (e) => { if (error) error(e); });
+}
+
+FibaroAPI.prototype.init = function init(HCNode) {
     var _api = this;
 
     if (_api.validateConfig(HCNode)) {
-        _api.emit('connected', {});
         this.configNode = HCNode;
-        // console.debug(configNode);
+        _api.fibaroInit(() => {
+            _api.emit('connected', {});
+        }, () => {
+            _api.emit('error', { text: "HC intialization failed" });
+            this.configNode = null;
+        })
     } else {
         // error
         this.configNode = null;
-    }
-
-    if (config) {
-        this.output_topic = config.output_topic || this.output_topic;
-        this.roomMode = config.room_mode || this.roomMode;
-        this.globals_topic = config.globals_topic || this.globals_topic;
     }
 }
 
@@ -47,32 +65,6 @@ FibaroAPI.prototype.poll = function poll(init) {
         return
     }
 
-    if (this.roomMode) {
-        if (this.devices.length == 0) {
-            _api.sendRequest(this.configNode, '/devices',
-                (data) => {
-                    try {
-                        this.devices = JSON.parse(data);
-                    } catch (e) {
-                        console.debug(e);
-                    }
-                }, (error) => { console.debug(error) });
-            return;
-        }
-
-        if (this.rooms.length == 0) {
-            _api.sendRequest(this.configNode, '/rooms',
-                (data) => {
-                    try {
-                        this.rooms = JSON.parse(data);
-                    } catch (e) {
-                        console.debug(e);
-                    }
-                }, (error) => { console.debug(error) });
-            return;
-        }
-    }
-
     if (init) this.lastPoll = 1;
     _api.sendRequest(this.configNode, `/refreshStates?last=${this.lastPoll}`,
         (data) => {
@@ -82,65 +74,36 @@ FibaroAPI.prototype.poll = function poll(init) {
                 if (updates.last != undefined)
                     this.lastPoll = updates.last;
 
-                if (calledLastPoll == 1) {
-                    // initial changes
-                    if (updates.changes != undefined) {
+                if (updates.changes != undefined) {
+                    // devices initialization...
+                    if (calledLastPoll == 1) {
+                        // console.debug("devices initialization...");
                         updates.changes.map((change) => {
-                            // console.debug(change);
-                            var event = {};
-                            change.roomID = this.roomMode ? _api.getRoomByDeviceID(change.id) : 0;
-                            event.topic = `${this.output_topic}/${this.roomMode ? `${change.roomID}/` : ''}${change.id}`;
-                            if (change.value != undefined) {
-                                event.payload = change.value;
-                            } else if (change.log != undefined) {
-                                // stop SPAMMING
-                                event = null;
-                            } else {
-                                delete change.id;
-                                event.payload = change;
-                            }
-
-                            // do it
-                            if (event) {
-                                _api.emit('event', event);
+                            // initial states
+                            if (change.value) {
+                                let event = {};
+                                event.topic = "DevicePropertyUpdatedEvent";
+                                event.payload = {
+                                    id: change.id,
+                                    property: "value",
+                                    newValue: change.value,
+                                    oldValue: null
+                                };
+                                _api.emit('events', event);
                             }
                         });
+                        return
                     }
-                    return
                 }
 
                 // events
                 if (updates.events != undefined) {
                     updates.events.map((s) => {
-                        if (s.type == "DevicePropertyUpdatedEvent") {
-                            if (s.data.property) {
-                                let event = {};
-                                let roomID = this.roomMode ? _api.getRoomByDeviceID(s.data.id) : 0;
-                                event.topic = `${this.output_topic}/${this.roomMode ? `${roomID}/` : ''}${s.data.id}`;
-                                if (s.data.property == "value") {
-                                    event.payload = s.data.newValue;
-                                } else {
-                                    event.payload = { property: s.data.property, value: s.data.newValue };
-                                }
-                                // console.debug(event);
-                                _api.emit('event', event);
-                            } else {
-                                // why I am here?
-                                console.debug(s);
-                            }
-                        }
-                        else if (s.type == "CentralSceneEvent") {
+                        if (s.type) {
                             let event = {};
-                            let roomID = this.roomMode ? _api.getRoomByDeviceID(s.data.deviceId) : 0;
-                            event.topic = `${this.output_topic}/${this.roomMode ? `${roomID}/` : ''}${s.data.deviceId}`;
-                            delete s.data.deviceId;
-                            event.payload = { property: s.type, value: s.data };
-                            // console.debug(event);
-                            _api.emit('event', event);
-                        } else if (s.type == "AccessControlEvent") {
-                            // TODO
-                        } else {
-                            // unhandled event
+                            event.topic = s.type;
+                            event.payload = s.data;
+                            _api.emit('events', event);
                         }
                     });
                 }
@@ -155,6 +118,7 @@ FibaroAPI.prototype.poll = function poll(init) {
 
 FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
     var _api = this;
+
     let q = new URLSearchParams(args).toString();
     var url = "/" + methodName;
     if (q) {
@@ -220,12 +184,6 @@ FibaroAPI.prototype.queryState = function queryState(deviceID, property, callbac
             try {
                 if (callback) {
                     callback(payload);
-                } else {
-                    var event = {};
-                    var roomID = this.roomMode ? _api.getRoomByDeviceID(deviceID) : 0;
-                    event.topic = `${this.output_topic}/${this.roomMode ? `${roomID}/` : ''}${deviceID}`;
-                    event.payload = payload;
-                    _api.emit('query', event);
                 }
             } catch (e) {
                 console.debug(e);
