@@ -23,6 +23,7 @@ module.exports = function (RED) {
         fibaro.on('error', function (error) {
             if (node.configured && error.code == 401) node.configured = false;
             node.status({ fill: 'red', shape: 'ring', text: `error: ${error.text}` });
+            node.error(error);
         });
 
         // handle all events. just ONLY for user purposes via MQTT! (output #1)

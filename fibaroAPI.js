@@ -79,12 +79,14 @@ FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
     //console.debug(opts);
     request(opts, (err, response, data) => {
         if (err) {
+            // console.error(err);
             error(err);
         } else {
             const { statusCode } = response;
             if (statusCode === 200 || statusCode === 201 || statusCode === 202) {
                 callback(data);
             } else {
+                // console.error(response);
                 error({ code: statusCode });
             }
         }
@@ -124,8 +126,8 @@ FibaroAPI.prototype.init = function init(HCNode) {
         this.configNode = HCNode;
         _api.fibaroInit(() => {
             _api.emit('connected', {});
-        }, () => {
-            _api.emit('error', { text: "HC intialization failed" });
+        }, (e) => {
+            _api.emit('error', { text: "HC intialization failed", error: e });
             this.configNode = null;
         })
     } else {
