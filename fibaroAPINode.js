@@ -115,6 +115,7 @@ module.exports = function (RED) {
         fibaro.init(this.serverConfig);
 
         if (pollerPeriod != 0) {
+            if (this.poller) { clearTimeout(this.poller); }
             this.poller = setInterval(function () {
                 poll(initialization);
                 initialization = false;
