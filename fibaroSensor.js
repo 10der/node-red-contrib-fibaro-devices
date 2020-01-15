@@ -15,7 +15,7 @@ module.exports = function (RED) {
                 }, 1000);
 
                 var event = {};
-                event.topic = msg.topic;
+                event.topic = msg.topic;    
                 event.payload = msg.payload;
                 try { event.payload = JSON.parse(event.payload); } // obj
                 catch (e) {/* */ }
