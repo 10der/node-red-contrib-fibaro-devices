@@ -7,16 +7,16 @@ module.exports = function (RED) {
         var fibaro = this.serverConfig.client;
         var events = n.events;
         var customActions = n.payload ? JSON.parse(n.payload) : {};
+        node.status({});
 
-        // do not SPAM ZWave packets!
-        // var checkState = function (value, deviceID, property, func) {
-        //     fibaro.queryState(deviceID, property, (currentState) => {
-        //         // console.debug(msg.payload, currentState.value, msg.payload != currentState.value);
-        //         if (value != currentState.value) {
-        //             func();
-        //         }
-        //     });
-        // }
+        if (this.serverConfig) {
+            if (!fibaro.validateConfig(this.serverConfig, node)) {
+                node.error("Node has invalid configuration");
+                n.server = null;
+                return
+            }
+        }
+
         fibaro.on('event', function (msg) {
             if (MyMessage(msg, n.deviceID)) {
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });

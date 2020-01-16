@@ -5,6 +5,15 @@ module.exports = function (RED) {
         this.serverConfig = RED.nodes.getNode(this.server);
         var node = this;
         var fibaro = this.serverConfig.client;
+        node.status({});
+
+        if (this.serverConfig) {
+            if (!fibaro.validateConfig(this.serverConfig, node)) {
+                node.error("Node has invalid configuration");
+                n.server = null;
+                return
+            }
+        }
 
         fibaro.on('event', function (msg) {
             if (MyMessage(msg, n.deviceID)) {
@@ -14,7 +23,7 @@ module.exports = function (RED) {
                 }, 1000);
 
                 var event = {};
-                event.topic = msg.topic;    
+                event.topic = msg.topic;
                 event.payload = msg.payload;
                 try { event.payload = JSON.parse(event.payload); } // obj
                 catch (e) {/* */ }

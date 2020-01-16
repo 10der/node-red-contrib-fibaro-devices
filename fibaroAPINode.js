@@ -7,6 +7,16 @@ module.exports = function (RED) {
         var fibaro = this.serverConfig.client;
         var node = this;
         var initialization = true;
+        node.status({});
+
+        if (this.serverConfig) {
+            if (!fibaro.validateConfig(this.serverConfig, node)) {
+                node.configured = false;
+                node.error("Node has invalid configuration");
+                config.server = null;
+                return
+            }
+        }
 
         const defaultPollerPeriod = 1;
         let pollerPeriod = config.pollingInterval ? parseInt(config.pollingInterval) : defaultPollerPeriod;
@@ -98,7 +108,7 @@ module.exports = function (RED) {
         // node control
         node.on('input', function (msg) {
             if (!node.configured) {
-                node.status({ fill: "red", shape: "dot", text: "NOT CONFIGURED!" });
+                node.status({ fill: "red", shape: "dot", text: "Node is not configured" });
                 return
             }
 
@@ -124,7 +134,7 @@ module.exports = function (RED) {
 
         var poll = function (init) {
             if (!node.configured) {
-                node.status({ fill: "red", shape: "dot", text: "NOT CONFIGURED!" });
+                node.status({ fill: "red", shape: "dot", text: "Node is not configured" });
                 return
             }
             fibaro.poll(init);

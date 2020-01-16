@@ -6,6 +6,15 @@ module.exports = function (RED) {
         var node = this;
         var fibaro = this.serverConfig.client;
         var events = n.events;
+        node.status({});
+
+        if (this.serverConfig) {
+            if (!fibaro.validateConfig(this.serverConfig, node)) {
+                node.error("Node has invalid configuration");
+                n.server = null;
+                return
+            }
+        }
 
         // do not SPAM ZWave packets!
         var checkState = function (value, deviceID, property, func) {

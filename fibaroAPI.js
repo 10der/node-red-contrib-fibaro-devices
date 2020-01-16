@@ -14,38 +14,63 @@ var FibaroAPI = function () {
 
 util.inherits(FibaroAPI, events.EventEmitter);
 
-FibaroAPI.prototype.validateConfig = function validateConfig(configNode) {
+FibaroAPI.prototype.validateConfig = function validateConfig(configNode, node) {
     var _api = this;
 
     if (configNode === undefined || configNode === null) {
-        _api.emit('error', { text: 'please select a config node' });
+        let text = 'please select a config node';
+        if (node) {
+            node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
+        } else {
+            _api.emit('error', { text: text });
+        }
         return false;
     }
 
     if (configNode.credentials) {
         // all OK
     } else {
-        _api.emit('error', { text: 'missing valid credentials in config node' });
+        let text = 'missing valid credentials in config node';
+        if (node) {
+            node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
+        } else {
+            _api.emit('error', { text: text });
+        }
         return false;
     }
 
-    if (configNode.credentials && configNode.credentials.login) {
+    if (configNode.credentials && configNode.credentials.login && configNode.credentials.login !== undefined) {
         // all OK
     } else {
-        _api.emit('error', { text: 'missing login in config node' });
+        let text = 'missing login in config node';
+        if (node) {
+            node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
+        } else {
+            _api.emit('error', { text: text });
+        }
         return false;
     }
 
-    if (configNode.credentials && configNode.credentials.password) {
+    if (configNode.credentials && configNode.credentials.password && configNode.credentials.password !== undefined) {
         // all OK
     } else {
-        _api.emit('error', { text: 'missing password in config node' });
+        let text = 'missing passeord in config node';
+        if (node) {
+            node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
+        } else {
+            _api.emit('error', { text: text });
+        }
         return false;
     }
 
     const hasIpAddress = configNode.ipaddress !== undefined && configNode.ipaddress !== null && configNode.ipaddress.trim().length > 5;
     if (!hasIpAddress) {
-        _api.emit('error', { text: 'missing IP Address in config node' });
+        let text = 'missing IP Address in config node';
+        if (node) {
+            node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
+        } else {
+            _api.emit('error', { text: text });
+        }
         return false;
     }
 

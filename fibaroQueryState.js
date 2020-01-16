@@ -4,8 +4,16 @@ module.exports = function (RED) {
         this.server = n.server;
         this.serverConfig = RED.nodes.getNode(this.server);
         var node = this;
-        node.status({});
         var fibaro = this.serverConfig.client;        
+        node.status({});
+
+        if (this.serverConfig) {
+            if (!fibaro.validateConfig(this.serverConfig, node)) {
+                node.error("Node has invalid configuration");
+                n.server = null;
+                return
+            }
+        }
 
         node.on('input', function (msg) {
             if (msg.payload) {
