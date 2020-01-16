@@ -26,6 +26,19 @@ module.exports = function (RED) {
             node.error(error);
         });
 
+        fibaro.on('init', function (deviceID) {
+            if (pollerPeriod == 0) {
+                if (deviceID != 0) {
+                    fibaro.queryState(deviceID, "value", (currentState) => {
+                        let event = {};
+                        event.topic = `${deviceID}`;
+                        event.payload = currentState.value;
+                        fibaro.emit('event', event);
+                    }, (error) => { console.debug(error) });
+                }
+            }
+        });
+
         // handle all events. just ONLY for user purposes via MQTT! (output #1)
         fibaro.on('events', function (msg) {
             node.status({ fill: "green", shape: "dot", text: "ready" });
@@ -87,7 +100,7 @@ module.exports = function (RED) {
             if (!node.configured) {
                 node.status({ fill: "red", shape: "dot", text: "NOT CONFIGURED!" });
                 return
-            }            
+            }
 
             if ((msg.payload) && (msg.payload.constructor === Object)) {
                 if (msg.topic && pollerPeriod == 0) {

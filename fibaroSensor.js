@@ -8,7 +8,6 @@ module.exports = function (RED) {
 
         fibaro.on('event', function (msg) {
             if (MyMessage(msg, n.deviceID)) {
-                // console.debug(msg);                
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
                 setTimeout(() => {
                     node.status({});
@@ -26,6 +25,9 @@ module.exports = function (RED) {
                 }
             }
         });
+
+        // request the current state
+        fibaro.emit('init', n.deviceID);
     }
 
     function MyMessage(msg, deviceID) {

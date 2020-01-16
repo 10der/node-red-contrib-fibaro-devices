@@ -78,6 +78,9 @@ module.exports = function (RED) {
                 // error action
                 console.debug("error action!");
             }
+
+            // request the current state
+            fibaro.emit('init', n.deviceID);
         });
     }
 
