@@ -36,7 +36,7 @@ module.exports = function (RED) {
         });
 
         // request the current state
-        fibaro.emit('init', n.deviceID);
+        fibaro.emit('init', n.deviceID, node);
     }
 
     function MyMessage(msg, deviceID) {
