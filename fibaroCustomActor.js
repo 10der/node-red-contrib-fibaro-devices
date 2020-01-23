@@ -25,14 +25,13 @@ module.exports = function (RED) {
                 }, 1000);
 
                 if (events) {
-                    try {
-                        var event = {};
-                        event.topic = msg.topic;
-                        event.payload = JSON.parse(msg.payload);
-                        node.send([event]);
-                    } catch (e) {
-                        // Ignore malformed
-                    }
+                    var event = {};
+                    event.topic = msg.topic;
+                    event.payload = msg.payload;
+                    try { event.payload = JSON.parse(msg.payload); } // obj
+                    catch (e) {/* */ }
+                    event.passthrough = true; // mark message
+                    node.send([event]);
                 }
             }
         });

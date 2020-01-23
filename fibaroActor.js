@@ -35,6 +35,7 @@ module.exports = function (RED) {
                 if (events) {
                     var event = {};
                     event.topic = msg.topic;
+                    event.payload = msg.payload;
                     try { event.payload = JSON.parse(msg.payload); } // obj
                     catch (e) {/* */ }
                     event.passthrough = true; // mark message
