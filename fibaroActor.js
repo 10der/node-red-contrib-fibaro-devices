@@ -28,7 +28,7 @@ module.exports = function (RED) {
         fibaro.on('event', function (msg, init) {
             if (MyMessage(msg, n.deviceID)) {
                 if (init && (node.id !== init.id)) return;
-                
+
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
                 setTimeout(() => {
                     node.status({});
@@ -41,7 +41,11 @@ module.exports = function (RED) {
                     try { event.payload = JSON.parse(msg.payload); } // obj
                     catch (e) {/* */ }
                     event.passthrough = true; // mark message
-                    node.send([event]);
+                    if (typeof event.payload === 'object') {
+                        node.send([null, event]);
+                    } else {
+                        node.send([event, null]);
+                    }
                 }
             }
         });
