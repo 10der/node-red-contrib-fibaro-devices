@@ -25,8 +25,10 @@ module.exports = function (RED) {
                 }
             });
         }
-        fibaro.on('event', function (msg) {
+        fibaro.on('event', function (msg, init) {
             if (MyMessage(msg, n.deviceID)) {
+                if (init && (node.id !== init.id)) return;
+                
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
                 setTimeout(() => {
                     node.status({});
@@ -81,10 +83,10 @@ module.exports = function (RED) {
                 // error action
                 console.debug("error action!");
             }
-
-            // request the current state
-            fibaro.emit('init', n.deviceID, node);
         });
+
+        // request the current state
+        fibaro.emit('init', n.deviceID, node);
     }
 
     function MyMessage(msg, deviceID) {

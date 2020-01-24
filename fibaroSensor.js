@@ -15,8 +15,10 @@ module.exports = function (RED) {
             }
         }
 
-        fibaro.on('event', function (msg) {
+        fibaro.on('event', function (msg, init) {
             if (MyMessage(msg, n.deviceID)) {
+                if (init && (node.id !== init.id)) return;
+                
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
                 setTimeout(() => {
                     node.status({});

@@ -42,11 +42,7 @@ module.exports = function (RED) {
                     let event = {};
                     event.topic = `${deviceID}`;
                     event.payload = currentState.value;
-                    if (node) {
-                        node.emit('event', event);
-                    } else {
-                        fibaro.emit('event', event);
-                    }
+                    fibaro.emit('event', event, node);
                 }, (error) => { console.debug(error) });
             }
         });
