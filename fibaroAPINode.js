@@ -37,19 +37,17 @@ module.exports = function (RED) {
         });
 
         fibaro.on('init', function (deviceID, node) {
-            if (pollerPeriod == 0) {
-                if (deviceID != 0) {
-                    fibaro.queryState(deviceID, "value", (currentState) => {
-                        let event = {};
-                        event.topic = `${deviceID}`;
-                        event.payload = currentState.value;
-                        if (node) {
-                            node.emit('event', event);
-                        } else {
-                            fibaro.emit('event', event);
-                        }
-                    }, (error) => { console.debug(error) });
-                }
+            if (deviceID != 0) {
+                fibaro.queryState(deviceID, "value", (currentState) => {
+                    let event = {};
+                    event.topic = `${deviceID}`;
+                    event.payload = currentState.value;
+                    if (node) {
+                        node.emit('event', event);
+                    } else {
+                        fibaro.emit('event', event);
+                    }
+                }, (error) => { console.debug(error) });
             }
         });
 

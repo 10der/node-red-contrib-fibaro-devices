@@ -5,7 +5,7 @@ var util = require('util');
 var request = require('request');
 
 var FibaroAPI = function () {
-    this.lastPoll = 1;
+    this.lastPoll = 0;
     this.configNode = null;
     this.rooms = [];
     this.devices = [];
@@ -169,36 +169,13 @@ FibaroAPI.prototype.poll = function poll(init) {
         return
     }
 
-    if (init) this.lastPoll = 1;
+    if (init) this.lastPoll = 0;
     _api.sendRequest(`/refreshStates?last=${this.lastPoll}`,
         (data) => {
             try {
                 var updates = JSON.parse(data);
-                var calledLastPoll = this.lastPoll;
                 if (updates.last != undefined)
                     this.lastPoll = updates.last;
-
-                if (updates.changes != undefined) {
-                    // devices initialization...
-                    if (calledLastPoll == 1) {
-                        // console.debug("devices initialization...");
-                        updates.changes.map((change) => {
-                            // initial states
-                            if (change.value) {
-                                let event = {};
-                                event.topic = "DevicePropertyUpdatedEvent";
-                                event.payload = {
-                                    id: change.id,
-                                    property: "value",
-                                    newValue: change.value,
-                                    oldValue: null
-                                };
-                                _api.emit('events', event);
-                            }
-                        });
-                        return
-                    }
-                }
 
                 // events
                 if (updates.events != undefined) {
