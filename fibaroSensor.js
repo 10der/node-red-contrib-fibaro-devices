@@ -15,9 +15,9 @@ module.exports = function (RED) {
             }
         }
 
-        fibaro.on('event', function (msg, init) {
+        fibaro.on('event', function (msg, nodeId) {
             if (MyMessage(msg, n.deviceID)) {
-                if (init && (node.id !== init.id)) return;
+                if (nodeId && (node.id !== nodeId)) return;
                 
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
                 setTimeout(() => {
@@ -38,7 +38,8 @@ module.exports = function (RED) {
         });
 
         // request the current state
-        fibaro.emit('init', n.deviceID, node);
+        console.debug(n);
+        fibaro.emit('init', n.deviceID, n.id);
     }
 
     function MyMessage(msg, deviceID) {

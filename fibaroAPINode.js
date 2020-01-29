@@ -36,13 +36,13 @@ module.exports = function (RED) {
             node.error(error);
         });
 
-        fibaro.on('init', function (deviceID, node) {
+        fibaro.on('init', function (deviceID, nodeId) {
             if (deviceID != 0) {
                 fibaro.queryState(deviceID, "value", (currentState) => {
                     let event = {};
                     event.topic = `${deviceID}`;
                     event.payload = currentState.value;
-                    fibaro.emit('event', event, node);
+                    fibaro.emit('event', event, nodeId);
                 }, (error) => { console.debug(error) });
             }
         });
