@@ -1,10 +1,11 @@
 module.exports = function (RED) {
     function FibaroQueryState(n) {
         RED.nodes.createNode(this, n);
-        this.server = n.server;
-        this.serverConfig = RED.nodes.getNode(this.server);
+        this.deviceID = n.deviceID;
+        var serverConfig = RED.nodes.getNode(n.server);
+        var fibaro = serverConfig.client;
         var node = this;
-        var fibaro = this.serverConfig.client;
+
         node.status({});
 
         if (this.serverConfig) {

@@ -1,12 +1,14 @@
 module.exports = function (RED) {
     function fibaroCustomActor(n) {
         RED.nodes.createNode(this, n);
-        this.server = n.server;
-        this.serverConfig = RED.nodes.getNode(this.server);
+        this.deviceID = n.deviceID;
+        var serverConfig = RED.nodes.getNode(n.server);
+        var fibaro = serverConfig.client;
         var node = this;
-        var fibaro = this.serverConfig.client;
+
         var events = n.events;
         var customActions = n.payload ? JSON.parse(n.payload) : {};
+
         node.status({});
 
         if (this.serverConfig) {
@@ -17,10 +19,13 @@ module.exports = function (RED) {
             }
         }
 
-        fibaro.on('event', function (msg, nodeId) {
-            if (MyMessage(msg, n.deviceID)) {
-                if (nodeId && (node.id !== nodeId)) return;
+        this.on("close", function() {
+            fibaro.emit('done', n.id);
+        });
 
+        node.on('event', function (msg) {
+            if (MyMessage(msg, n.deviceID)) {
+                
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
                 setTimeout(() => {
                     node.status({});
@@ -86,7 +91,7 @@ module.exports = function (RED) {
         });
 
         // request the current state
-        fibaro.emit('init', n.deviceID, n.id);
+        fibaro.emit('init', n.id, n.deviceID);
     }
 
     function MyMessage(msg, deviceID) {

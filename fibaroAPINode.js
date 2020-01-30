@@ -7,6 +7,8 @@ module.exports = function (RED) {
         var fibaro = this.serverConfig.client;
         var node = this;
         var initialization = true;
+        var nodes = [];
+
         node.status({});
 
         if (this.serverConfig) {
@@ -16,6 +18,17 @@ module.exports = function (RED) {
                 config.server = null;
                 return
             }
+        }
+
+        var sendEvent = function (deviceID, event) {
+            // console.debug(nodes.length);
+            var items = nodes.filter(o => o.deviceID === String(deviceID));
+            items.forEach(item => {
+                var node = RED.nodes.getNode(item.nodeId);
+                if (node) {
+                    node.emit('event', event);
+                }
+            });
         }
 
         const defaultPollerPeriod = 1;
@@ -36,15 +49,12 @@ module.exports = function (RED) {
             node.error(error);
         });
 
-        fibaro.on('init', function (deviceID, nodeId) {
-            if (deviceID != 0) {
-                fibaro.queryState(deviceID, "value", (currentState) => {
-                    let event = {};
-                    event.topic = `${deviceID}`;
-                    event.payload = currentState.value;
-                    fibaro.emit('event', event, nodeId);
-                }, (error) => { console.debug(error) });
-            }
+        fibaro.on('init', function (nodeId, deviceID) {
+            nodes.push({ nodeId: nodeId, deviceID: deviceID });
+        });
+
+        fibaro.on('done', function (nodeId) {
+            nodes = nodes.filter(item => item.nodeId !== nodeId)
         });
 
         // handle all events. just ONLY for user purposes via MQTT! (output #1)
@@ -73,7 +83,7 @@ module.exports = function (RED) {
                         event.payload = { property: payload.property, value: payload.newValue };
                     }
                     // console.debug(event);
-                    fibaro.emit('event', event);
+                    sendEvent(payload.id, event);
                 }
             }
             else if (topic == "CentralSceneEvent") {
@@ -82,7 +92,7 @@ module.exports = function (RED) {
                 delete payload.deviceId;
                 event.payload = { property: topic, value: payload };
                 // console.debug(event);
-                fibaro.emit('event', event);
+                sendEvent(payload.deviceId, event);
             }
 
             // var roomMode = config.room_mode || false;
@@ -136,6 +146,26 @@ module.exports = function (RED) {
                 node.status({ fill: "red", shape: "dot", text: "Node is not configured" });
                 return
             }
+
+            // statup initialization
+            if (init) {
+                nodes.forEach(item => {
+                    // quering the current state
+                    fibaro.queryState(item.deviceID, "value", (currentState) => {
+                        let event = {};
+                        event.topic = `${item.deviceID}`;
+                        event.payload = currentState.value;
+                        // call node event
+                        var n = RED.nodes.getNode(item.nodeId);
+                        if (n) {
+                            console.debug(`initialize Fibaro node ${item.nodeId} by deviceID ${item.deviceID}`);
+                            n.emit('event', event);
+                        }
+                    }, (error) => { console.debug(error) });
+                });
+            }
+
+            // just call poll for a new events
             fibaro.poll(init);
         }
 
