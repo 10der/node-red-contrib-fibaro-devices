@@ -90,15 +90,6 @@ module.exports = function (RED) {
             }
         });
 
-        // statup initialization
-        fibaro.queryState(n.deviceID, 'value', (currentState) => {
-            let event = {};
-            event.topic = `${n.deviceID}`;
-            event.payload = currentState.value;
-            node.emit('event', event);
-            node.status({ fill: 'yellow', shape: 'ring', text: 'init' });
-        }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
-
         // register device
         fibaro.emit('init', n.id, n.deviceID);
     }

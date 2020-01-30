@@ -50,7 +50,7 @@ module.exports = function (RED) {
         });
 
         fibaro.on('init', function (nodeId, deviceID) {
-            nodes.push({ nodeId: nodeId, deviceID: deviceID });
+            nodes.push({ nodeId: nodeId, deviceID: deviceID, initialized: false });
         });
 
         fibaro.on('done', function (nodeId) {
@@ -146,6 +146,20 @@ module.exports = function (RED) {
                 node.status({ fill: "red", shape: "dot", text: "Node is not configured" });
                 return
             }
+
+            var notInitialized = nodes.filter(o => !o.initialized);
+            notInitialized.forEach(item => {
+                fibaro.queryState(item.deviceID, 'value', (currentState) => {
+                    let event = {};
+                    event.topic = `${item.deviceID}`;
+                    event.payload = currentState.value;
+                    var node = RED.nodes.getNode(item.nodeId);
+                    if (node) {
+                        node.emit('event', event);
+                    }
+                    item.initialized = true;
+                }, (error) => console.debug(error));
+            });
 
             // just call poll for a new events
             fibaro.poll(init);
