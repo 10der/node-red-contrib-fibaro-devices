@@ -19,13 +19,13 @@ module.exports = function (RED) {
             }
         }
 
-        this.on("close", function() {
+        this.on("close", function () {
             fibaro.emit('done', n.id);
         });
 
         node.on('event', function (msg) {
             if (MyMessage(msg, n.deviceID)) {
-                
+
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
                 setTimeout(() => {
                     node.status({});
@@ -98,6 +98,9 @@ module.exports = function (RED) {
             node.emit('event', event);
             node.status({ fill: 'yellow', shape: 'ring', text: 'init' });
         }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
+
+        // register device
+        fibaro.emit('init', n.id, n.deviceID);
     }
 
     function MyMessage(msg, deviceID) {

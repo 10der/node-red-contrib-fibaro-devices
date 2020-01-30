@@ -147,24 +147,6 @@ module.exports = function (RED) {
                 return
             }
 
-            // // statup initialization
-            // if (init) {
-            //     nodes.forEach(item => {
-            //         // quering the current state
-            //         fibaro.queryState(item.deviceID, "value", (currentState) => {
-            //             let event = {};
-            //             event.topic = `${item.deviceID}`;
-            //             event.payload = currentState.value;
-            //             // call node event
-            //             var n = RED.nodes.getNode(item.nodeId);
-            //             if (n) {
-            //                 console.debug(`initialize Fibaro node ${item.nodeId} by deviceID ${item.deviceID}`);
-            //                 n.emit('event', event);
-            //             }
-            //         }, (error) => { console.debug(error) });
-            //     });
-            // }
-
             // just call poll for a new events
             fibaro.poll(init);
         }

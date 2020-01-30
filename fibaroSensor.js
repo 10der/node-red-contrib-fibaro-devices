@@ -48,6 +48,9 @@ module.exports = function (RED) {
             node.emit('event', event);
             node.status({ fill: 'yellow', shape: 'ring', text: 'init' });
         }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
+
+        // register device
+        fibaro.emit('init', n.id, n.deviceID);
     }
 
     function MyMessage(msg, deviceID) {
