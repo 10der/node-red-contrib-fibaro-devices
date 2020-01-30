@@ -4,12 +4,12 @@ module.exports = function (RED) {
   function FibaroServer(n) {
     RED.nodes.createNode(this, n);
     this.client = new FibaroAPI();
-
     this.ipaddress = n.ipaddress;
     if (this.credentials) {
       this.login = this.credentials.login;
       this.password = this.credentials.password;
     }
+    
     var node = this;
     var fibaro = this.client;
 

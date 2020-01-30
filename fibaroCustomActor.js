@@ -91,7 +91,7 @@ module.exports = function (RED) {
         });
 
         // register device
-        fibaro.emit('init', n.id, n.deviceID);
+        fibaro.addDevice(n.id, n.deviceID);
     }
 
     function MyMessage(msg, deviceID) {

@@ -7,7 +7,6 @@ module.exports = function (RED) {
         var fibaro = this.serverConfig.client;
         var node = this;
         var initialization = true;
-        var nodes = [];
 
         node.status({});
 
@@ -18,11 +17,14 @@ module.exports = function (RED) {
                 config.server = null;
                 return
             }
+        } else {
+            node.error("Node configuration is not found!");
+            return
         }
 
         var sendEvent = function (deviceID, event) {
-            // console.debug(nodes.length);
-            var items = nodes.filter(o => o.deviceID === String(deviceID));
+            // console.debug(fibaro.nodes);
+            var items = fibaro.nodes.filter(o => o.deviceID === String(deviceID));
             items.forEach(item => {
                 var node = RED.nodes.getNode(item.nodeId);
                 if (node) {
@@ -49,12 +51,9 @@ module.exports = function (RED) {
             node.error(error);
         });
 
-        fibaro.on('init', function (nodeId, deviceID) {
-            nodes.push({ nodeId: nodeId, deviceID: deviceID, initialized: false });
-        });
-
         fibaro.on('done', function (nodeId) {
-            nodes = nodes.filter(item => item.nodeId !== nodeId)
+            // console.debug(`core asking to remove ${nodeId} node`);
+            fibaro.removeDevice(nodeId);
         });
 
         // handle all events. just ONLY for user purposes via MQTT! (output #1)
@@ -147,18 +146,22 @@ module.exports = function (RED) {
                 return
             }
 
-            var notInitialized = nodes.filter(o => !o.initialized);
+            var notInitialized = fibaro.nodes.filter(o => !o.initialized);
             notInitialized.forEach(item => {
-                fibaro.queryState(item.deviceID, 'value', (currentState) => {
-                    let event = {};
-                    event.topic = `${item.deviceID}`;
-                    event.payload = currentState.value;
-                    var node = RED.nodes.getNode(item.nodeId);
-                    if (node) {
+                // console.debug(`init node: ${item.nodeId} with device: ${item.deviceID}`);
+                var node = RED.nodes.getNode(item.nodeId);
+                if (node) {
+                    fibaro.queryState(item.deviceID, 'value', (currentState) => {
+                        let event = {};
+                        event.topic = `${item.deviceID}`;
+                        event.payload = currentState.value;
                         node.emit('event', event);
-                    }
+                        // console.debug(`node: ${item.nodeId} with device: ${item.deviceID} initialized`);
+                    }, (error) => console.debug(error));
                     item.initialized = true;
-                }, (error) => console.debug(error));
+                } else {
+                    console.debug(`node not found: ${item.nodeId}`);
+                }
             });
 
             // just call poll for a new events

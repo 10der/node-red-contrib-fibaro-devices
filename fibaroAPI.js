@@ -9,6 +9,7 @@ var FibaroAPI = function () {
     this.configNode = null;
     this.rooms = [];
     this.devices = [];
+    this.nodes = [];
     events.EventEmitter.call(this);
 }
 
@@ -161,6 +162,14 @@ FibaroAPI.prototype.init = function init(HCNode) {
     }
 }
 
+FibaroAPI.prototype.addDevice = function addDevice(nodeId, deviceID) {
+    this.nodes.push({ nodeId: nodeId, deviceID: deviceID, initialized: false });
+}
+
+FibaroAPI.prototype.removeDevice = function removeDevice(nodeId) {
+    this.nodes = this.nodes.filter(item => item.nodeId !== nodeId)
+}
+
 FibaroAPI.prototype.poll = function poll(init) {
     var _api = this;
 
@@ -238,7 +247,7 @@ FibaroAPI.prototype.queryState = function queryState(deviceID, property, callbac
                 console.debug(e);
             }
         }, (e) => {
-            if (error) error(e)
+            if (error) error(e); else console.debug(e);
         });
 }
 

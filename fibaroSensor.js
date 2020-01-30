@@ -13,15 +13,17 @@ module.exports = function (RED) {
                 node.error("Node has invalid configuration");
                 return
             }
+        } else {
+            node.error("Node configuration is not found!");
         }
 
-        this.on("close", function() {
+        this.on("close", function () {
             fibaro.emit('done', n.id);
         });
 
         node.on('event', function (msg) {
             if (MyMessage(msg, n.deviceID)) {
-                
+
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
                 setTimeout(() => {
                     node.status({});
@@ -41,7 +43,7 @@ module.exports = function (RED) {
         });
 
         // register device
-        fibaro.emit('init', n.id, n.deviceID);
+        fibaro.addDevice(n.id, n.deviceID);
     }
 
     function MyMessage(msg, deviceID) {
