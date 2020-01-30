@@ -2,19 +2,18 @@ module.exports = function (RED) {
     function FibaroAPINode(config) {
         RED.nodes.createNode(this, config);
 
-        this.server = config.server;
-        this.serverConfig = RED.nodes.getNode(this.server);
-        var fibaro = this.serverConfig.client;
+        var server = config.server;
+        var serverConfig = RED.nodes.getNode(server);
+        var fibaro = serverConfig.client;
         var node = this;
         var initialization = true;
 
         node.status({});
 
-        if (this.serverConfig) {
-            if (!fibaro.validateConfig(this.serverConfig, node)) {
+        if (serverConfig) {
+            if (!serverConfig.validateConfig(node)) {
                 node.configured = false;
                 node.error("Node has invalid configuration");
-                config.server = null;
                 return
             }
         } else {
@@ -52,7 +51,7 @@ module.exports = function (RED) {
         });
 
         fibaro.on('done', function (nodeId) {
-            // console.debug(`core asking to remove ${nodeId} node`);
+            //  console.debug(`core asking to remove ${nodeId} node`);
             fibaro.removeDevice(nodeId);
         });
 
@@ -116,7 +115,7 @@ module.exports = function (RED) {
         // node control
         node.on('input', function (msg) {
             if (!node.configured) {
-                node.status({ fill: "red", shape: "dot", text: "Node is not configured" });
+                // node.status({ fill: "red", shape: "dot", text: "Node is not configured" });
                 return
             }
 
@@ -142,7 +141,7 @@ module.exports = function (RED) {
 
         var poll = function (init) {
             if (!node.configured) {
-                node.status({ fill: "red", shape: "dot", text: "Node is not configured" });
+                // node.status({ fill: "red", shape: "dot", text: "Node is not configured" });
                 return
             }
 
@@ -171,7 +170,7 @@ module.exports = function (RED) {
         // init Fibaro API
         node.configured = false;
         node.status({});
-        fibaro.init(this.serverConfig);
+        fibaro.init();
 
         if (pollerPeriod != 0) {
             if (this.poller) { clearTimeout(this.poller); }

@@ -4,9 +4,12 @@ var events = require('events');
 var util = require('util');
 var request = require('request');
 
-var FibaroAPI = function () {
+var FibaroAPI = function (ipaddress, login, password) {
+    this.ipaddress = ipaddress;
+    this.login = login;
+    this.password = password;
+    //...........
     this.lastPoll = 0;
-    this.configNode = null;
     this.rooms = [];
     this.devices = [];
     this.nodes = [];
@@ -15,78 +18,37 @@ var FibaroAPI = function () {
 
 util.inherits(FibaroAPI, events.EventEmitter);
 
-FibaroAPI.prototype.validateConfig = function validateConfig(configNode, node) {
-    var _api = this;
-
-    if (configNode === undefined || configNode === null) {
-        let text = 'please select a config node';
-        if (node) {
-            node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
-        } else {
-            _api.emit('error', { text: text });
-        }
-        return false;
-    }
-
-    if (configNode.credentials) {
+FibaroAPI.prototype.validateConfig = function validateConfig() {
+    if (this.login && this.login !== undefined) {
         // all OK
     } else {
-        let text = 'missing valid credentials in config node';
-        if (node) {
-            node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
-        } else {
-            _api.emit('error', { text: text });
-        }
         return false;
     }
 
-    if (configNode.credentials && configNode.credentials.login && configNode.credentials.login !== undefined) {
+    if (this.password && this.password !== undefined) {
         // all OK
     } else {
-        let text = 'missing login in config node';
-        if (node) {
-            node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
-        } else {
-            _api.emit('error', { text: text });
-        }
         return false;
     }
 
-    if (configNode.credentials && configNode.credentials.password && configNode.credentials.password !== undefined) {
-        // all OK
-    } else {
-        let text = 'missing passeord in config node';
-        if (node) {
-            node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
-        } else {
-            _api.emit('error', { text: text });
-        }
-        return false;
-    }
-
-    const hasIpAddress = configNode.ipaddress !== undefined && configNode.ipaddress !== null && configNode.ipaddress.trim().length > 5;
+    const hasIpAddress = this.ipaddress !== undefined && this.ipaddress !== null && this.ipaddress.trim().length > 5;
     if (!hasIpAddress) {
-        let text = 'missing IP Address in config node';
-        if (node) {
-            node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
-        } else {
-            _api.emit('error', { text: text });
-        }
         return false;
     }
-
     return true;
 }
 
 FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
-    if (!this.configNode) {
+    var _api = this;
+
+    if (!_api.validateConfig()) {
         if (error) error({ text: "HC API configuration is empty" });
         return
     }
 
-    const host = this.configNode.ipaddress;
-    const user = this.configNode.login;
-    const pass = this.configNode.password;
+    const host = this.ipaddress;
+    const user = this.login;
+    const pass = this.password;
     // ................................................
     const url = `http://${host}/api${query}`;
     const opts = {
@@ -145,21 +107,14 @@ FibaroAPI.prototype.fibaroInit = function fibaroInit(callback, error) {
         }, (e) => { if (error) error(e); });
 }
 
-FibaroAPI.prototype.init = function init(HCNode) {
+FibaroAPI.prototype.init = function init() {
     var _api = this;
-
-    if (_api.validateConfig(HCNode)) {
-        this.configNode = HCNode;
-        _api.fibaroInit(() => {
-            _api.emit('connected', {});
-        }, (e) => {
-            _api.emit('error', { text: "HC intialization failed", error: e });
-            this.configNode = null;
-        })
-    } else {
-        // error
+    _api.fibaroInit(() => {
+        _api.emit('connected', {});
+    }, (e) => {
+        _api.emit('error', { text: "HC intialization failed", error: e });
         this.configNode = null;
-    }
+    })
 }
 
 FibaroAPI.prototype.addDevice = function addDevice(nodeId, deviceID) {
@@ -173,7 +128,7 @@ FibaroAPI.prototype.removeDevice = function removeDevice(nodeId) {
 FibaroAPI.prototype.poll = function poll(init) {
     var _api = this;
 
-    if (!this.configNode) {
+    if (!_api.validateConfig()) {
         _api.emit('error', { text: 'config node is not configured' });
         return
     }
@@ -207,11 +162,12 @@ FibaroAPI.prototype.poll = function poll(init) {
 }
 
 FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
-    if (!this.configNode) {
+    var _api = this;
+
+    if (!_api.validateConfig()) {
         // HC is not configured
         return
     }
-    var _api = this;
 
     let q = new URLSearchParams(args).toString();
     var url = "/" + methodName;
@@ -229,6 +185,25 @@ FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
         },
         (error) => {
             _api.emit('error', { text: `error: ${error}`, error: error });
+        });
+}
+
+FibaroAPI.prototype.queryDevices = function queryDevices(query, callback, error) {
+    var _api = this;
+    // /api/devices/?visible=true&enabled=true&interface=light&property=[isLight,true]
+    _api.sendRequest(`/devices/?${query}`,
+        (data) => {
+            var payload = JSON.parse(data);
+            try {
+                if (callback) {
+                    callback(payload);
+                }
+            } catch (e) {
+                if (error) error(e)
+                console.debug(e);
+            }
+        }, (e) => {
+            if (error) error(e); else console.debug(e);
         });
 }
 

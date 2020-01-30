@@ -3,15 +3,59 @@ var FibaroAPI = require('./fibaroAPI.js');
 module.exports = function (RED) {
   function FibaroServer(n) {
     RED.nodes.createNode(this, n);
-    this.client = new FibaroAPI();
+    this.client = null;
     this.ipaddress = n.ipaddress;
-    if (this.credentials) {
-      this.login = this.credentials.login;
-      this.password = this.credentials.password;
-    }
     
+    if (this.credentials) {
+      this.client = new FibaroAPI(n.ipaddress, this.credentials.login, this.credentials.password);
+    }
+
     var node = this;
     var fibaro = this.client;
+
+    FibaroServer.prototype.validateConfig = function validateConfig(node) {
+
+      if (this.credentials) {
+        // all OK
+      } else {
+        let text = 'missing valid credentials in config node';
+        if (node) {
+          node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
+        }
+        return false;
+      }
+
+      if (this.credentials && this.credentials.login && this.credentials.login !== undefined) {
+        // all OK
+      } else {
+        let text = 'missing login in config node';
+        if (node) {
+          node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
+        }
+        return false;
+      }
+
+      if (this.credentials && this.credentials.password && this.credentials.password !== undefined) {
+        // all OK
+      } else {
+        let text = 'missing passeord in config node';
+        if (node) {
+          node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
+        }
+        return false;
+      }
+
+      const hasIpAddress = this.ipaddress !== undefined && this.ipaddress !== null && this.ipaddress.trim().length > 5;
+      if (!hasIpAddress) {
+        let text = 'missing IP Address in config node';
+        if (node) {
+          node.status({ fill: 'red', shape: 'ring', text: `error: ${text}` });
+        }
+        return false;
+      }
+
+      return true;
+    }
 
     // Build API
     RED.httpAdmin.get(`/${node.name}/:object`, (req, res) => {

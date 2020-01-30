@@ -8,22 +8,31 @@ module.exports = function (RED) {
 
         node.status({});
 
-        if (this.serverConfig) {
-            if (!fibaro.validateConfig(this.serverConfig, node)) {
+        if (serverConfig) {
+            if (!serverConfig.validateConfig(node)) {
                 node.error("Node has invalid configuration");
-                n.server = null;
                 return
             }
+        } else {
+            node.error("Node configuration is not found!");
         }
 
         node.on('input', function (msg) {
             var deviceID = msg.topic.split("/").reverse()[0];
-            var property = msg.property || 'value';
-            fibaro.queryState(deviceID, property, (currentState) => {
-                msg.currentState = currentState;
-                node.send(msg);
-                node.status({});
-            }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
+            if (isNaN((parseInt(deviceID)))) {
+                fibaro.queryDevices(msg.topic, (result) => {
+                    msg.currentState = result;
+                    node.send(msg);
+                    node.status({});
+                }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
+            } else {
+                var property = msg.property || 'value';
+                fibaro.queryState(deviceID, property, (currentState) => {
+                    msg.currentState = currentState;
+                    node.send(msg);
+                    node.status({});
+                }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
+            }
         });
     }
 

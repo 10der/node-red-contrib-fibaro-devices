@@ -9,7 +9,7 @@ module.exports = function (RED) {
         node.status({});
 
         if (serverConfig) {
-            if (!fibaro.validateConfig(serverConfig, node)) {
+            if (!serverConfig.validateConfig(node)) {
                 node.error("Node has invalid configuration");
                 return
             }

@@ -11,12 +11,13 @@ module.exports = function (RED) {
 
         node.status({});
 
-        if (this.serverConfig) {
-            if (!fibaro.validateConfig(this.serverConfig, node)) {
+        if (serverConfig) {
+            if (!serverConfig.validateConfig(node)) {
                 node.error("Node has invalid configuration");
-                n.server = null;
                 return
             }
+        } else {
+            node.error("Node configuration is not found!");
         }
 
         this.on("close", function () {
