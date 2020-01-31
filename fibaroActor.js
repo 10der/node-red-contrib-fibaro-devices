@@ -34,7 +34,7 @@ module.exports = function (RED) {
         });
 
         node.on('event', function (msg) {
-            if (MyMessage(msg, n.deviceID)) {
+            if (MyMessage(msg, this.deviceID)) {
 
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
                 setTimeout(() => {
@@ -43,7 +43,7 @@ module.exports = function (RED) {
 
                 if (events) {
                     var event = {};
-                    event.topic = msg.topic;
+                    event.topic = String(msg.topic);
                     event.payload = msg.payload;
                     try { event.payload = JSON.parse(msg.payload); } // obj
                     catch (e) {/* */ }
@@ -66,8 +66,9 @@ module.exports = function (RED) {
                 node.status({});
             }, 1000);
 
-            if (n.deviceID == 0) {
-                n.deviceID = msg.topic.split("/").reverse()[0];
+            var deviceID = this.deviceID;
+            if (this.deviceID == 0) {
+                deviceID = String(msg.topic).split("/").reverse()[0];
             }
 
             var payload = msg.payload;
@@ -80,16 +81,16 @@ module.exports = function (RED) {
             if (typeof payload == "boolean") {
                 // binarySwitch
                 var action = payload ? "turnOn" : "turnOff";
-                checkState(Number(msg.payload), n.deviceID, 'value',
-                    () => fibaro.callAPI("callAction", { deviceID: n.deviceID, name: action }));
+                checkState(Number(msg.payload), deviceID, 'value',
+                    () => fibaro.callAPI("callAction", { deviceID: deviceID, name: action }));
             } else if (typeof msg.payload == "number") {
                 // multiLevelSwitch
-                checkState(msg.payload, n.deviceID, 'value',
-                    () => fibaro.callAPI("callAction", { deviceID: n.deviceID, name: "setValue", arg1: payload }));
+                checkState(msg.payload, deviceID, 'value',
+                    () => fibaro.callAPI("callAction", { deviceID: deviceID, name: "setValue", arg1: payload }));
             } else if (typeof payload === 'string') {
                 // callAction name as string
-                payload.deviceID = n.deviceID;
-                fibaro.callAPI("callAction", { deviceID: n.deviceID, name: payload });
+                payload.deviceID = deviceID
+                fibaro.callAPI("callAction", { deviceID: deviceID, name: payload });
             } else {
                 // error action
                 console.debug("error action!");
@@ -97,11 +98,13 @@ module.exports = function (RED) {
         });
 
         // register device
-        fibaro.addDevice(n.id, n.deviceID);
+        if (this.deviceID != 0) {
+            fibaro.addDevice(n.id, n.deviceID);
+        }
     }
 
     function MyMessage(msg, deviceID) {
-        return (msg.topic.split("/").reverse()[0] == deviceID);
+        return (String(msg.topic).split("/").reverse()[0] == deviceID);
     }
 
     RED.nodes.registerType("fibaroActor", FibaroActor);

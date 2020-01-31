@@ -25,7 +25,7 @@ module.exports = function (RED) {
         });
 
         node.on('event', function (msg) {
-            if (MyMessage(msg, n.deviceID)) {
+            if (MyMessage(msg, this.deviceID)) {
 
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
                 setTimeout(() => {
@@ -34,7 +34,7 @@ module.exports = function (RED) {
 
                 if (events) {
                     var event = {};
-                    event.topic = msg.topic;
+                    event.topic = String(msg.topic);
                     event.payload = msg.payload;
                     try { event.payload = JSON.parse(msg.payload); } // obj
                     catch (e) {/* */ }
@@ -54,8 +54,9 @@ module.exports = function (RED) {
                 node.status({});
             }, 1000);
 
-            if (n.deviceID == 0) {
-                n.deviceID = msg.topic.split("/").reverse()[0];
+            var deviceID = this.deviceID;
+            if (this.deviceID == 0) {
+                deviceID = String(msg.topic).split("/").reverse()[0];
             }
 
             var payload = msg.payload;
@@ -68,14 +69,14 @@ module.exports = function (RED) {
             if (typeof payload === 'object') {
                 // customAction from payload
                 // console.debug(payload);
-                payload.deviceID = n.deviceID;
+                payload.deviceID = deviceID;
                 fibaro.callAPI("callAction", payload);
             } else if (typeof payload === 'string') {
                 // custom action by name
                 if (customActions) {
                     var command = customActions[payload];
                     if (command) {
-                        command.deviceID = n.deviceID;
+                        command.deviceID = deviceID;
                         // console.debug(command);
                         fibaro.callAPI("callAction", command);
                     } else {
@@ -92,11 +93,13 @@ module.exports = function (RED) {
         });
 
         // register device
-        fibaro.addDevice(n.id, n.deviceID);
-    }
+        if (this.deviceID != 0) {
+            fibaro.addDevice(n.id, n.deviceID);
+        }
+   }
 
     function MyMessage(msg, deviceID) {
-        return (msg.topic.split("/").reverse()[0] == deviceID);
+        return (String(msg.topic).split("/").reverse()[0] == deviceID);
     }
 
     RED.nodes.registerType("fibaroXActor", fibaroCustomActor);

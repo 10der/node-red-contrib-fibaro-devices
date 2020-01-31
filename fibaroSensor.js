@@ -30,7 +30,7 @@ module.exports = function (RED) {
                 }, 1000);
 
                 var event = {};
-                event.topic = msg.topic;
+                event.topic = String(msg.topic);
                 event.payload = msg.payload;
                 try { event.payload = JSON.parse(event.payload); } // obj
                 catch (e) {/* */ }
@@ -43,11 +43,13 @@ module.exports = function (RED) {
         });
 
         // register device
-        fibaro.addDevice(n.id, n.deviceID);
+        if (this.deviceID != 0) {
+            fibaro.addDevice(n.id, n.deviceID);
+        }
     }
 
     function MyMessage(msg, deviceID) {
-        return (msg.topic.split("/").reverse()[0] == deviceID);
+        return (String(msg.topic).split("/").reverse()[0] == deviceID);
     }
 
     RED.nodes.registerType("fibaroSensor", FibaroSensor);

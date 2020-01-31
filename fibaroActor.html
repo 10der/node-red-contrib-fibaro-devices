@@ -4,7 +4,7 @@
         color: "GoldenRod",
         defaults: {
             name: { value: "" },
-            deviceID: { value: "0", required: true },
+            deviceID: { value: "0", required: true, validate: RED.validators.number() },
             server: { type: "fibaro-server", required: true },
             events: { value: false },
             outputs: { value: 0 } // Standard field that will be used by Node-Red to draw N output ports in the flow editor
