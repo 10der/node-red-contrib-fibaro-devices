@@ -10,8 +10,6 @@ var FibaroAPI = function (ipaddress, login, password) {
     this.password = password;
     //...........
     this.lastPoll = 0;
-    this.rooms = [];
-    this.devices = [];
     this.nodes = [];
     events.EventEmitter.call(this);
 }
@@ -84,23 +82,13 @@ FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
 FibaroAPI.prototype.fibaroInit = function fibaroInit(callback, error) {
     var _api = this;
 
-    // getting rooms
-    _api.sendRequest('/rooms',
+    _api.sendRequest('/settings/info',
         (data) => {
             try {
-                this.rooms = JSON.parse(data);
-                // getting devices
-                _api.sendRequest('/devices',
-                    (data) => {
-                        try {
-                            this.devices = JSON.parse(data);
-                            if (callback) {
-                                callback();
-                            }
-                        } catch (e) {
-                            if (error) error(e);
-                        }
-                    }, (e) => { if (error) error(e); });
+                var info = JSON.parse(data);
+                if (callback) {
+                    callback(info);
+                }
             } catch (e) {
                 if (error) error(e);
             }
@@ -226,12 +214,12 @@ FibaroAPI.prototype.queryState = function queryState(deviceID, property, callbac
         });
 }
 
-FibaroAPI.prototype.getRoomByDeviceID = function getRoomByDeviceID(deviceID) {
-    const device = this.devices.find(o => o.id == deviceID);
-    if (device) {
-        return device.roomID;
-    }
-    return 0;
-}
+// FibaroAPI.prototype.getRoomByDeviceID = function getRoomByDeviceID(deviceID) {
+//     const device = this.devices.find(o => o.id == deviceID);
+//     if (device) {
+//         return device.roomID;
+//     }
+//     return 0;
+// }
 
 module.exports = FibaroAPI;

@@ -172,15 +172,19 @@ module.exports = function (RED) {
         node.status({});
         fibaro.init();
 
+        if (this.poller) { clearTimeout(this.poller); }        
         if (pollerPeriod != 0) {
-            if (this.poller) { clearTimeout(this.poller); }
             this.poller = setInterval(function () {
                 poll(initialization);
                 initialization = false;
             }, pollerPeriod * 1000);
         }
+
         this.on("close", function () {
             if (this.poller) { clearTimeout(this.poller); }
+            if (fibaro != null) {
+                fibaro.removeAllListeners();
+            }
         });
     }
     RED.nodes.registerType("fibaroAPI", FibaroAPINode);
