@@ -113,7 +113,7 @@ FibaroAPI.prototype.removeDevice = function removeDevice(nodeId) {
     this.nodes = this.nodes.filter(item => item.nodeId !== nodeId)
 }
 
-FibaroAPI.prototype.poll = function poll(init) {
+FibaroAPI.prototype.poll = function poll() {
     var _api = this;
 
     if (!_api.validateConfig()) {
@@ -121,7 +121,6 @@ FibaroAPI.prototype.poll = function poll(init) {
         return
     }
 
-    if (init) this.lastPoll = 0;
     _api.sendRequest(`/refreshStates?last=${this.lastPoll}`,
         (data) => {
             try {

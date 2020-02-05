@@ -6,8 +6,7 @@ module.exports = function (RED) {
         var serverConfig = RED.nodes.getNode(server);
         var fibaro = serverConfig.client;
         var node = this;
-        var initialization = true;
-
+        node.configured = false;
         node.status({});
 
         if (serverConfig) {
@@ -48,6 +47,14 @@ module.exports = function (RED) {
             if (node.configured && error.code == 401) node.configured = false;
             node.status({ fill: 'red', shape: 'ring', text: `error: ${error.text}` });
             node.error(error);
+
+            // node configured?
+            if (node.configured) {
+                // trying to re-init again
+                setTimeout(() => {
+                    fibaro.init();
+                }, 2000);
+            }
         });
 
         fibaro.on('done', function (nodeId) {
@@ -87,10 +94,9 @@ module.exports = function (RED) {
             else if (topic == "CentralSceneEvent") {
                 let event = {};
                 event.topic = `${payload.deviceId}`;
-                delete payload.deviceId;
                 event.payload = { property: topic, value: payload };
                 // console.debug(event);
-                sendEvent(payload.deviceId, event);
+                sendEvent(event.topic, event);
             }
 
             // var roomMode = config.room_mode || false;
@@ -98,6 +104,8 @@ module.exports = function (RED) {
 
             // passthrough
             if (config.outputs > 0) {
+                var output_topic = ""; //"home/fibaro";
+                msg.topic = output_topic ? `${output_topic}/${msg.topic}` : msg.topic;
                 node.send(msg);
             }
         });
@@ -134,19 +142,17 @@ module.exports = function (RED) {
             }
 
             if (parseInt(msg.payload) === 0) {
-                node.status({ fill: 'yellow', shape: 'ring', text: 'force re-init mode' });
-                initialization = true;
+                // node.status({ fill: 'yellow', shape: 'ring', text: 'force re-init mode' });
             }
         });
 
-        var poll = function (init) {
+        var poll = function () {
             if (!node.configured) {
                 // node.status({ fill: "red", shape: "dot", text: "Node is not configured" });
                 return
             }
 
-            var notInitialized = fibaro.nodes.filter(o => !o.initialized);
-            notInitialized.forEach(item => {
+            fibaro.nodes.filter(o => !o.initialized).forEach(item => {
                 // console.debug(`init node: ${item.nodeId} with device: ${item.deviceID}`);
                 var node = RED.nodes.getNode(item.nodeId);
                 if (node) {
@@ -156,7 +162,9 @@ module.exports = function (RED) {
                         event.payload = currentState.value;
                         node.emit('event', event);
                         // console.debug(`node: ${item.nodeId} with device: ${item.deviceID} initialized`);
-                    }, (error) => console.debug(error));
+                    }, (error) => {
+                        console.debug(error)
+                    });
                     item.initialized = true;
                 } else {
                     console.debug(`node not found: ${item.nodeId}`);
@@ -164,19 +172,20 @@ module.exports = function (RED) {
             });
 
             // just call poll for a new events
-            fibaro.poll(init);
+            fibaro.poll();
         }
 
         // init Fibaro API
         node.configured = false;
         node.status({});
+
+        // init Fibaro connect
         fibaro.init();
 
-        if (this.poller) { clearTimeout(this.poller); }        
+        if (this.poller) { clearTimeout(this.poller); }
         if (pollerPeriod != 0) {
             this.poller = setInterval(function () {
-                poll(initialization);
-                initialization = false;
+                poll();
             }, pollerPeriod * 1000);
         }
 
