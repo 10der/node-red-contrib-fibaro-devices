@@ -73,7 +73,7 @@ FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
                 callback(data);
             } else {
                 // console.error(response);
-                error({ code: statusCode });
+                error({ code: statusCode, text: response.statusMessage });
             }
         }
     });
@@ -175,10 +175,30 @@ FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
         });
 }
 
+FibaroAPI.prototype.queryDeviceHistory = function queryDeviceHistory(deviceID, query, callback, error) {
+    var _api = this;
+    var path = `/panels/event?deviceID=${deviceID}&${query}`;
+    _api.sendRequest(path,
+        (data) => {
+            var payload = JSON.parse(data);
+            try {
+                if (callback) {
+                    callback(payload);
+                }
+            } catch (e) {
+                if (error) error(e)
+                console.debug(e);
+            }
+        }, (e) => {
+            if (error) error(e); else console.debug(e);
+        });
+}
+
 FibaroAPI.prototype.queryDevices = function queryDevices(query, callback, error) {
     var _api = this;
     // /api/devices/?visible=true&enabled=true&interface=light&property=[isLight,true]
-    _api.sendRequest(`/devices/?${query}`,
+    var path = `/devices/?${query}`;
+    _api.sendRequest(path,
         (data) => {
             var payload = JSON.parse(data);
             try {
