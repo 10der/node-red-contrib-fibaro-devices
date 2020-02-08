@@ -11,6 +11,7 @@ var FibaroAPI = function (ipaddress, login, password) {
     //...........
     this.lastPoll = 0;
     this.nodes = [];
+    this.globals = [];
     events.EventEmitter.call(this);
 }
 
@@ -146,6 +147,36 @@ FibaroAPI.prototype.poll = function poll() {
         (error) => {
             _api.emit('error', { text: `poll devices data error: ${error.code}`, error: error });
         });
+
+    _api.sendRequest(`/globalVariables`,
+        (data) => {
+            try {
+                var globals = JSON.parse(data);
+                globals.forEach((obj) => {
+                    const old = this.globals.find(o => o.name === obj.name);
+                    if (old === undefined || old === null) {
+                        let event = {};
+                        event.topic = "GlobalVariableUpdatedEvent";
+                        event.payload = obj;
+                        _api.emit('events', event);
+                    } else {
+                        if (old.value !== obj.value) {
+                            let event = {};
+                            event.topic = "GlobalVariableUpdatedEvent";
+                            event.payload = obj;
+                            _api.emit('events', event);
+                        }
+                    }
+                });
+                this.globals = globals;
+            } catch (e) {
+                _api.emit('error', { text: `error: ${e}` });
+            }
+        },
+        (error) => {
+            _api.emit('error', { text: `poll globalVariables data error: ${error.code}`, error: error });
+        });
+
 }
 
 FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {

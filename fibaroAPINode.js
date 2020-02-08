@@ -98,6 +98,9 @@ module.exports = function (RED) {
                 // console.debug(event);
                 sendEvent(event.topic, event);
             }
+            else if (topic == "GlobalVariableUpdatedEvent") {
+                // nothing todo
+            }
 
             // var roomMode = config.room_mode || false;
             // let roomID = 0 ; //roomMode ? fibaro.getRoomByDeviceID(payload.id) : 0;
