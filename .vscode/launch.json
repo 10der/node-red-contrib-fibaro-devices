@@ -4,17 +4,12 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        // {
-        //     "type": "node",
-        //     "request": "attach",
-        //     "name": "Attach to Process",
-        //     "processId": "${command:PickProcess}",
-        // },
-        {
-			"type": "node",
-			"request": "attach",
-			"name": "Attach to pm2",
-			"processId": "${command.pm2support.readPid}"
-		},
+         {
+             "type": "node",
+             "request": "attach",
+             "name": "Attach to Process",
+             "processId": "${command:PickProcess}"
+             // "processId": "${command:pm2support.readPid}"
+         },
     ]
 }
