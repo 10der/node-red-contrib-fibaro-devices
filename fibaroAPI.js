@@ -101,8 +101,7 @@ FibaroAPI.prototype.init = function init() {
     _api.fibaroInit(() => {
         _api.emit('connected', {});
     }, (e) => {
-        _api.emit('error', { text: "HC intialization failed", error: e });
-        this.configNode = null;
+        _api.emit('failed', { text: "HC intialization failed", error: e });
     })
 }
 

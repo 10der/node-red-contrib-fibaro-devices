@@ -102,6 +102,8 @@ dist
 
 # TernJS port file
 .tern-port
+         
+.vscode/
 
 # windows must die
 *.cmd
