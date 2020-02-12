@@ -9,7 +9,6 @@
              "request": "attach",
              "name": "Attach to Process",
              "processId": "${command:PickProcess}"
-             // "processId": "${command:pm2support.readPid}"
          },
     ]
 }
