@@ -140,21 +140,18 @@ module.exports = function (RED) {
                 return
             }
 
-            if ((msg.payload) && (msg.payload.constructor === Object)) {
-                if (msg.topic && pollerPeriod == 0) {
-                    // MQTT
-                    msg.topic = msg.payload.type;
-                    msg.payload = msg.payload.data;
-                    fibaro.emit('events', msg);
-                    // console.debug(msg);
-                } else {
-                    // call API
-                    node.status({ fill: "blue", shape: "dot", text: "API..." });
-                    fibaro.callAPI(msg.topic, msg.payload);
-                }
+            // is mqtt message?
+            if (msg.mqtt) {
+                msg.topic = msg.payload.type;
+                msg.payload = msg.payload.data;
+                fibaro.emit('events', msg);
+            } else {
+                // call API
+                node.status({ fill: "blue", shape: "dot", text: "API..." });
+                fibaro.callAPI(msg.topic, msg.payload);
             }
 
-            if (parseInt(msg.payload) === 0) {                
+            if (parseInt(msg.payload) === 0) {
                 // TODO
             }
         });
