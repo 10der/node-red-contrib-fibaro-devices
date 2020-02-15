@@ -6,6 +6,8 @@ module.exports = function (RED) {
         var serverConfig = RED.nodes.getNode(server);
         var fibaro = serverConfig.client;
         var node = this;
+        var output_topic = "";
+
         node.initialized = false;
         node.status({});
 
@@ -113,12 +115,8 @@ module.exports = function (RED) {
                 // nothing todo
             }
 
-            // var roomMode = config.room_mode || false;
-            // let roomID = 0 ; //roomMode ? fibaro.getRoomByDeviceID(payload.id) : 0;
-
             // passthrough
             if (config.outputs > 0) {
-                var output_topic = ""; //"home/fibaro";
                 msg.topic = output_topic ? `${output_topic}/${msg.topic}` : msg.topic;
                 node.send(msg);
             }
@@ -144,7 +142,14 @@ module.exports = function (RED) {
                         event.topic = `${item.deviceID}`;
                         event.payload = currentState.value;
                         node.emit('event', event);
-                        // console.debug(`node: ${item.nodeId} with device: ${item.deviceID} initialized`);
+
+                        // passthrough
+                        if (config.outputs > 0) {
+                            let msg = {};
+                            msg.topic = output_topic ? `${output_topic}/${msg.topic}` : msg.topic;
+                            msg.payload = currentState.value;
+                            node.send(msg);
+                        }
                     }, (error) => {
                         console.debug(error)
                     });
@@ -195,7 +200,7 @@ module.exports = function (RED) {
             }
             // initialize devices (if needed)
             initializeDevices();
-            
+
             // just call poll for a new events
             fibaro.poll();
         }

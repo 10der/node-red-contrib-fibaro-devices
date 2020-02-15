@@ -186,23 +186,27 @@ FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
         return
     }
 
-    let q = new URLSearchParams(args).toString();
-    var url = "/" + methodName;
-    if (q) {
-        url = url + "?" + q;
+    try {
+        let q = new URLSearchParams(args).toString();
+        var url = "/" + methodName;
+        if (q) {
+            url = url + "?" + q;
+        }
+        // console.debug(url);
+        _api.sendRequest(url,
+            (data) => {
+                var msg = {};
+                msg.topic = url;
+                msg.payload = data;
+                _api.emit('data', msg);
+                // console.debug(msg);
+            },
+            (error) => {
+                _api.emit('error', { text: `error: ${error}`, error: error });
+            });
+    } catch (error) {
+        console.debug(methodName, args, error);
     }
-    // console.debug(url);
-    _api.sendRequest(url,
-        (data) => {
-            var msg = {};
-            msg.topic = url;
-            msg.payload = data;
-            _api.emit('data', msg);
-            // console.debug(msg);
-        },
-        (error) => {
-            _api.emit('error', { text: `error: ${error}`, error: error });
-        });
 }
 
 FibaroAPI.prototype.queryDeviceHistory = function queryDeviceHistory(deviceID, query, callback, error) {
