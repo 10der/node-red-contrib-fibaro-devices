@@ -142,9 +142,17 @@ module.exports = function (RED) {
 
             // is mqtt message?
             if (msg.mqtt) {
-                msg.topic = msg.payload.type;
-                msg.payload = msg.payload.data;
-                fibaro.emit('events', msg);
+                var updates = msg.payload;
+                if (updates.events != undefined) {
+                    updates.events.map((s) => {
+                        if (s.type) {
+                            let event = {};
+                            event.topic = s.type;
+                            event.payload = s.data;
+                            fibaro.emit('events', event);
+                        }
+                    });
+                }
             } else {
                 // call API
                 node.status({ fill: "blue", shape: "dot", text: "API..." });
