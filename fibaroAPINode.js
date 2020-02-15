@@ -163,9 +163,10 @@ module.exports = function (RED) {
 
             // is mqtt message?
             if (msg.mqtt) {
-
+                // initialize devices (if needed)
                 initializeDevices();
-                
+
+                // parse evenets
                 var updates = msg.payload;
                 if (updates.events != undefined) {
                     updates.events.map((s) => {
@@ -192,7 +193,9 @@ module.exports = function (RED) {
             if (!node.initialized) {
                 return
             }
+            // initialize devices (if needed)
             initializeDevices();
+            
             // just call poll for a new events
             fibaro.poll();
         }
