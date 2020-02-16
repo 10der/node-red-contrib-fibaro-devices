@@ -63,7 +63,7 @@ FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
     };
 
     opts.headers.accept = 'application/json, text/plain;q=0.9, */*;q=0.8';
-    //console.debug(opts);
+
     request(opts, (err, response, data) => {
         if (err) {
             // console.error(err);
@@ -76,7 +76,7 @@ FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
                 // console.error(response);
                 error({ code: statusCode, text: response.statusMessage });
             }
-        }
+          }
     });
 }
 
