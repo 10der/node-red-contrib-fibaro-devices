@@ -5,7 +5,7 @@
   "dependencies": {
     "bufferutil": "^4.0.1",
     "eslint": "^6.8.0",
-    "request": "~2.87.0",
+    "node-fetch": "^2.6.0",
     "utf-8-validate": "^5.0.2"
   },
   "scripts": {

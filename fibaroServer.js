@@ -65,11 +65,11 @@ module.exports = function (RED) {
         fibaro.sendRequest('/rooms',
           (data) => {
             try {
-              rooms = JSON.parse(data);
+              rooms = data;
               fibaro.sendRequest('/devices',
                 (data) => {
                   try {
-                    let devices = JSON.parse(data);
+                    let devices = data;
                     devices = devices.filter(device => (device.enabled && device.visible && device.parentId > 1));
                     devices = devices.map((item) => {
                       let roomName = 'undefined';
@@ -91,7 +91,7 @@ module.exports = function (RED) {
           (data) => {
             let jdata;
             try {
-              jdata = JSON.parse(data);
+              jdata = data;
             } catch (e) {
               return;
             }

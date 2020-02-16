@@ -2,7 +2,8 @@
 
 var events = require('events');
 var util = require('util');
-var request = require('request');
+//var request = require('request');
+const fetch = require('node-fetch');
 
 var FibaroAPI = function (ipaddress, login, password) {
     this.ipaddress = ipaddress;
@@ -64,20 +65,32 @@ FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
 
     opts.headers.accept = 'application/json, text/plain;q=0.9, */*;q=0.8';
 
-    request(opts, (err, response, data) => {
-        if (err) {
-            // console.error(err);
-            error(err);
+    function make_base_auth(user, pass) {
+        var tok = user + ':' + pass;
+        const hash = Buffer.from(tok).toString('base64');
+        return hash;
+    }
+
+    const headers = { "Authorization": "Basic " + make_base_auth(user, pass) };
+
+    function checkStatus(res) {
+        if (res.ok) { // res.status >= 200 && res.status < 300
+            return res;
         } else {
-            const { statusCode } = response;
-            if (statusCode === 200 || statusCode === 201 || statusCode === 202) {
-                callback(data);
-            } else {
-                // console.error(response);
-                error({ code: statusCode, text: response.statusMessage });
-            }
-          }
-    });
+            throw new FibaroError({ code: res.status, text: res.statusText });
+        }
+    }
+
+    fetch(url, { headers })
+        .then(checkStatus)
+        .then(res => res.json())
+        .then(json =>
+            callback(json)
+        )
+        .catch(err =>
+            error({
+                code: err.code, text: "HTTP error"
+            }));
 }
 
 FibaroAPI.prototype.fibaroInit = function fibaroInit(callback, error) {
@@ -86,7 +99,7 @@ FibaroAPI.prototype.fibaroInit = function fibaroInit(callback, error) {
     _api.sendRequest('/settings/info',
         (data) => {
             try {
-                var info = JSON.parse(data);
+                var info = data;
                 if (callback) {
                     callback(info);
                 }
@@ -124,7 +137,7 @@ FibaroAPI.prototype.poll = function poll() {
     _api.sendRequest(`/refreshStates?last=${this.lastPoll}`,
         (data) => {
             try {
-                var updates = JSON.parse(data);
+                var updates = data;
                 if (updates.last != undefined)
                     this.lastPoll = updates.last;
 
@@ -150,7 +163,7 @@ FibaroAPI.prototype.poll = function poll() {
     _api.sendRequest(`/globalVariables`,
         (data) => {
             try {
-                var globals = JSON.parse(data);
+                var globals = data;
                 globals.forEach((obj) => {
                     const old = this.globals.find(o => o.name === obj.name);
                     if (old === undefined || old === null) {
@@ -214,7 +227,7 @@ FibaroAPI.prototype.queryDeviceHistory = function queryDeviceHistory(deviceID, q
     var path = `/panels/event?deviceID=${deviceID}&${query}`;
     _api.sendRequest(path,
         (data) => {
-            var payload = JSON.parse(data);
+            var payload = data;
             try {
                 if (callback) {
                     callback(payload);
@@ -234,7 +247,7 @@ FibaroAPI.prototype.queryDevices = function queryDevices(query, callback, error)
     var path = `/devices/?${query}`;
     _api.sendRequest(path,
         (data) => {
-            var payload = JSON.parse(data);
+            var payload = data;
             try {
                 if (callback) {
                     callback(payload);
@@ -253,7 +266,7 @@ FibaroAPI.prototype.queryState = function queryState(deviceID, property, callbac
     // /api/devices/969/properties/value
     _api.sendRequest(`/devices/${deviceID}/properties/${property}`,
         (data) => {
-            var payload = JSON.parse(data);
+            var payload = data;
             try {
                 if (callback) {
                     callback(payload);
@@ -267,6 +280,13 @@ FibaroAPI.prototype.queryState = function queryState(deviceID, property, callbac
         });
 }
 
+class FibaroError extends Error {
+    constructor(error) {
+        super(error.toString());
+        this.code = error.code;
+        this.text = error.text;
+    }
+}
 // FibaroAPI.prototype.getRoomByDeviceID = function getRoomByDeviceID(deviceID) {
 //     const device = this.devices.find(o => o.id == deviceID);
 //     if (device) {
