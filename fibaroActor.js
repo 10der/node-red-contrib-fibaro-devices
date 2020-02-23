@@ -95,6 +95,9 @@ module.exports = function (RED) {
                 // callAction name as string
                 payload.deviceID = deviceID
                 fibaro.callAPI("callAction", { deviceID: deviceID, name: payload });
+            } else if (typeof payload === 'object') {
+                payload.deviceID = deviceID
+                fibaro.callAPI("callAction", payload);
             } else {
                 // error action
                 console.debug("error action!");
