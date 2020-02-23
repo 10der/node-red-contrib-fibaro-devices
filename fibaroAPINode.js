@@ -142,14 +142,6 @@ module.exports = function (RED) {
                         event.topic = `${item.deviceID}`;
                         event.payload = currentState.value;
                         node.emit('event', event);
-
-                        // passthrough
-                        if (config.outputs > 0) {
-                            let msg = {};
-                            msg.topic = output_topic ? `${output_topic}/${msg.topic}` : msg.topic;
-                            msg.payload = currentState.value;
-                            node.send(msg);
-                        }
                     }, (error) => {
                         console.debug(error)
                     });
