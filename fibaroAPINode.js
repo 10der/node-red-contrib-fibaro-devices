@@ -40,7 +40,16 @@ module.exports = function (RED) {
 
         // Fibaro API evensts
         fibaro.on('connected', function () {
-            node.initialized = true;
+            fibaro.sendRequest("/sections", function (sections) {
+                node.send([null, { topic: "/sections", payload: sections }]);
+                fibaro.sendRequest("/rooms", function (rooms) {
+                    node.send([null, { topic: "/rooms", payload: rooms }]);
+                    fibaro.sendRequest("/devices", function (devices) {
+                        node.send([null, { topic: "/devices", payload: devices }]);
+                        node.initialized = true;
+                    }, (e) => node.error(e))
+                }, (e) => node.error(e))
+            }, (e) => node.error(e))
             node.status({ fill: "green", shape: "dot", text: "connected" });
         });
 

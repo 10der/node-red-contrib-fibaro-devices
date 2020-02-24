@@ -87,10 +87,12 @@ FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
         .then(json =>
             callback(json)
         )
-        .catch(err =>
-            error({
-                code: err.code, text: "HTTP error"
-            }));
+        .catch(err => {
+            if (error)
+                error({
+                    code: err.code, text: "HTTP error"
+                })
+        });
 }
 
 FibaroAPI.prototype.fibaroInit = function fibaroInit(callback, error) {
