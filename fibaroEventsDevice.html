@@ -1,0 +1,71 @@
+<script type="text/x-red" data-template-name="fibaroXDevice">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-server"><i class="icon-tag"></i> HC2 Server</label>
+        <input type="text" id="node-input-server" placeholder="">
+    </div>
+    <div class="form-row">
+        <label for="node-input-devices"><i class="fa fa-tasks"></i> Devices</label>
+        <input type="text" id="node-input-devices" placeholder="Devices">
+    </div>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-mqtt" style="display:inline-block; width: auto; vertical-align:baseline;">
+        <label for="node-input-mqtt" style="width: 70%;"> MQTT in mode</label>
+    </div>
+</script>
+
+
+<!-- Next, some simple help text is provided for the node.                   -->
+<script type="text/x-red" data-help-name="fibaroXDevice">
+   <p></p>
+   <p>Outputs an object called <b>msg</b> containing <b>msg.topic</b> and
+   <b>msg.payload</b>. msg.payload is a object.</p>
+</script>
+
+<!-- Finally, the node type is registered along with all of its properties   -->
+<!-- The example below shows a small subset of the properties that can be set-->
+<script type="text/javascript">
+    RED.nodes.registerType('fibaroXDevice', {
+        category: 'FIBARO',      // the palette category
+        defaults: {             // defines the editable properties of the node
+            name: { value: "" },   //  along with default values.
+            server: { type: "fibaro-server", required: true },
+            mqtt: { value: false },
+            devices: {
+                value: "",
+                validate: function (v) {
+                    if (!v) return true;
+                    try {
+                        JSON.parse(`[${v}]`);
+                        return true;
+                    } catch (err) {
+                        return false;
+                    }
+                }
+            }
+        },
+        inputs: 0,               // set the number of inputs - only 0 or 1
+        outputs: 2,              // set the number of outputs - 0 to n
+        // set the icon (held in icons dir below where you save the node)
+        icon: "myicon.png",     // saved in  icons/myicon.png
+        label: function () {     // sets the default label contents
+            return this.name || "fibaroXDevice";
+        },
+        labelStyle: function () { // sets the class to apply to the label
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function () {
+        },
+        oneditsave: function () {
+            var node = this;
+            if ($("#node-input-mqtt").is(':checked')) {
+                node.inputs = 1;
+            } else {
+                node.inputs = 0;
+            }
+        }
+    });
+</script>

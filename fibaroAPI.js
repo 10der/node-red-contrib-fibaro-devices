@@ -121,7 +121,7 @@ FibaroAPI.prototype.init = function init() {
 }
 
 FibaroAPI.prototype.addDevice = function addDevice(nodeId, deviceID) {
-    this.nodes.push({ nodeId: nodeId, deviceID: deviceID, initialized: false });
+    this.nodes.push({ nodeId: nodeId, deviceID: String(deviceID), initialized: false });
 }
 
 FibaroAPI.prototype.removeDevice = function removeDevice(nodeId) {

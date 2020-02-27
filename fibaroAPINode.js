@@ -23,7 +23,7 @@ module.exports = function (RED) {
 
         var sendEvent = function (deviceID, event) {
             // console.debug(fibaro.nodes);
-            var items = fibaro.nodes.filter(o => o.deviceID === String(deviceID));
+            var items = fibaro.nodes.filter(o => String(o.deviceID) === String(deviceID));
             items.forEach(item => {
                 var node = RED.nodes.getNode(item.nodeId);
                 if (node) {
