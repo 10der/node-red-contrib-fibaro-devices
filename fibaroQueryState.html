@@ -4,12 +4,67 @@
         defaults: {
             name: { value: "" },
             server: { type: "fibaro-server", required: true },
+            resultToPayload: { value: false },
+            deviceID: { value: "0", required: true, validate: RED.validators.number() },
         },
         inputs: 1,
         outputs: 1,
         icon: "fibaro-hc2.png",
         label: function () {
             return this.name || "fibaroQuery";
+        },
+        oneditprepare: function () {
+            var node = this;
+
+            try {
+                $("#node-input-name").autocomplete("destroy");
+            } catch (err) { }
+
+            $("#node-input-controlled").change(function () {
+                if ($("#node-input-controlled").prop("checked")) {
+                    $("#command-topic-row").show();
+                } else {
+                    $("#command-topic-row").hide();
+                }
+            });
+
+            $("#node-lookup-name").click(function () {
+                $("#node-lookup-name-icon").removeClass('fa-search');
+                $("#node-lookup-name-icon").addClass('spinner');
+                $("#node-lookup-name").addClass('disabled');
+
+                var endPoint = $("#node-input-server :selected").text();
+                $.getJSON(endPoint + "/devices", function (data) {
+                    var search = [];
+                    $.each(data, function (i, item) {
+                        search.push(item);
+                    });
+                    $("#node-input-name").autocomplete({
+                        source: search,
+                        minLength: 0,
+                        select: function (event, ui) {
+                            $(this).val(ui.item.label);
+                            $("#node-input-deviceID").val(ui.item.value);
+                            return false;
+                        },
+                        change: function (event, ui) {
+                        },
+                        close: function (event, ui) {
+                            $("#node-input-name").autocomplete("destroy");
+                        }
+                    }).autocomplete("search", $("#node-input-name").val());
+                })
+                    .fail(function () {
+                        console.log("error");
+                    })
+                    .always(function () {
+                        $("#node-lookup-name-icon").addClass('fa-search');
+                        $("#node-lookup-name-icon").removeClass('spinner');
+                        $("#node-lookup-name").removeClass('disabled');
+                    });
+            });
+        },
+        oneditsave: function () {
         }
     });
 </script>
@@ -22,8 +77,19 @@
     </div>
 
     <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
+        <label for="node-input-name"><i class="icon-bookmark"></i> Name</label>
+        <input type="text" id="node-input-name" style="width:60%;" placeholder="garage light sensor"/>
+        <a id="node-lookup-name" class="btn"><i id="node-lookup-name-icon" class="fa fa-search"></i></a>
+    </div>
+   
+    <div class="form-row">
+        <label for="node-input-deviceID"><i class="icon-tag"></i> Device ID</label>
+        <input type="text" id="node-input-deviceID">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-resultToPayload"><i class="fa fa-server"></i> To payload</label>
+        <input type="checkbox" id="node-input-resultToPayload" />
     </div>
 
 </script>

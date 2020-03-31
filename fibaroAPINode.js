@@ -91,6 +91,8 @@ module.exports = function (RED) {
                 node.status({});
             }, 2000);
 
+            // console.debug(msg);
+
             // internal post handling...
             var topic = msg.topic;
             var payload = msg.payload;
@@ -111,6 +113,11 @@ module.exports = function (RED) {
                     }
                     // console.debug(event);
                     sendEvent(payload.id, event);
+
+                    // // save state
+                    // if (payload.property == "value") {
+                    //     fibaro.states[event.topic] = { newValue: msg.payload.newValue, oldValue: msg.payload.oldValue };
+                    // }
                 }
             }
             else if (topic == "CentralSceneEvent") {

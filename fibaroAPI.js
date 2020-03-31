@@ -5,6 +5,9 @@ var util = require('util');
 //var request = require('request');
 const fetch = require('node-fetch');
 
+// var ev = new events.EventEmitter();
+// ev.setMaxListeners(0);
+
 var FibaroAPI = function (ipaddress, login, password) {
     this.ipaddress = ipaddress;
     this.login = login;
@@ -13,7 +16,9 @@ var FibaroAPI = function (ipaddress, login, password) {
     this.lastPoll = 0;
     this.nodes = [];
     this.globals = [];
+    this.states = {};
     events.EventEmitter.call(this);
+    this.setMaxListeners(0);
 }
 
 util.inherits(FibaroAPI, events.EventEmitter);
@@ -38,32 +43,13 @@ FibaroAPI.prototype.validateConfig = function validateConfig() {
     return true;
 }
 
-FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
-    var _api = this;
-
-    if (!_api.validateConfig()) {
-        if (error) error({ text: "HC API configuration is empty" });
-        return
-    }
+FibaroAPI.prototype.createRequest = function createRequest(query) {
 
     const host = this.ipaddress;
     const user = this.login;
     const pass = this.password;
     // ................................................
     const url = `http://${host}/api${query}`;
-    const opts = {
-        method: 'GET',
-        url,
-        headers: {}
-    };
-
-    opts.auth = {
-        user,
-        pass,
-        sendImmediately: false,
-    };
-
-    opts.headers.accept = 'application/json, text/plain;q=0.9, */*;q=0.8';
 
     function make_base_auth(user, pass) {
         var tok = user + ':' + pass;
@@ -71,7 +57,28 @@ FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
         return hash;
     }
 
-    const headers = { "Authorization": "Basic " + make_base_auth(user, pass) };
+    const request = {
+        url: url,
+        options: {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": "Basic " + make_base_auth(user, pass),
+                "Accept": 'application/json, text/plain;q=0.9, */*;q=0.8'
+            }
+        }
+    };
+
+    return request;
+}
+
+FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
+    var _api = this;
+
+    if (!_api.validateConfig()) {
+        if (error) error({ text: "HC API configuration is empty" });
+        return
+    }
 
     function checkStatus(res) {
         if (res.ok) { // res.status >= 200 && res.status < 300
@@ -81,7 +88,9 @@ FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
         }
     }
 
-    fetch(url, { headers })
+    const request = this.createRequest(query);
+    const options = request.options;
+    fetch(request.url, options)
         .then(checkStatus)
         .then(res => res.json())
         .then(json =>
@@ -92,6 +101,27 @@ FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
                 error({
                     code: err.code, text: "HTTP error"
                 })
+        });
+}
+
+FibaroAPI.prototype.sendRequestAsync = async function sendRequestAsync(query) {
+
+    function checkStatus(res) {
+        if (res.ok) { // res.status >= 200 && res.status < 300
+            return res;
+        } else {
+            throw new FibaroError({ code: res.status, text: res.statusText });
+        }
+    }
+
+    const request = this.createRequest(query);
+    const options = request.options;
+
+    return await fetch(request.url, options)
+        .then(checkStatus)
+        .then(res => res.json())
+        .catch(err => {
+            console.error({ code: err.code, text: "HTTP error" });
         });
 }
 
@@ -151,6 +181,7 @@ FibaroAPI.prototype.poll = function poll() {
                             event.topic = s.type;
                             event.payload = s.data;
                             _api.emit('events', event);
+                            // console.debug(event);
                         }
                     });
                 }
@@ -261,6 +292,16 @@ FibaroAPI.prototype.queryDevices = function queryDevices(query, callback, error)
         }, (e) => {
             if (error) error(e); else console.debug(e);
         });
+}
+
+FibaroAPI.prototype.queryStateAsync = async function queryStateAsync(deviceID, property) {
+    var _api = this;
+    // /api/devices/969/properties/value
+    // const cached = _api.states[Number(deviceID)];
+    // if (property == "value" && cached) {
+    //     return { value: cached.newValue };
+    // }
+    return await _api.sendRequestAsync(`/devices/${deviceID}/properties/${property}`)
 }
 
 FibaroAPI.prototype.queryState = function queryState(deviceID, property, callback, error) {

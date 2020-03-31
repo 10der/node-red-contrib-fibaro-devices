@@ -27,10 +27,17 @@ module.exports = function (RED) {
         // query devices
         // msg.topic = "visible=true&enabled=true&interface=light&property=[isLight,true]";
         node.on('input', function (msg) {
-            var deviceID = String(msg.topic).split("/").reverse()[0];
+            var deviceID = this.deviceID;
+            if (this.deviceID == 0) {
+                deviceID = String(msg.topic).split("/").reverse()[0];
+            }
+
             if (isNaN((parseInt(deviceID)))) {
                 fibaro.queryDevices(msg.topic, (result) => {
                     msg.currentState = result;
+                    if (n.resultToPayload) {
+                        msg.payload = result;
+                    }
                     node.send(msg);
                     node.status({});
                 }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
@@ -38,6 +45,9 @@ module.exports = function (RED) {
                 if (msg.events) {
                     fibaro.queryDeviceHistory(deviceID, msg.events, (result) => {
                         msg.currentState = result;
+                        if (n.resultToPayload) {
+                            msg.payload = result;
+                        }
                         node.send(msg);
                         node.status({});
                     }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
@@ -45,6 +55,11 @@ module.exports = function (RED) {
                     var property = msg.property || 'value';
                     fibaro.queryState(deviceID, property, (currentState) => {
                         msg.currentState = currentState;
+                        if (property == "value") {
+                            if (n.resultToPayload) {
+                                msg.payload = currentState.value;
+                            }
+                        }
                         node.send(msg);
                         node.status({});
                     }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
