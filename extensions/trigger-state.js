@@ -200,7 +200,7 @@ module.exports = function (RED) {
                 let event = eventMessage.event;
 
                 if (output.comparatorPropertyType !== 'always') {
-                    if (output.comparatorPropertyValue != "property") {
+                    if (output.comparatorPropertyType == "property") {
                         const state = await fibaro.queryStateAsync(eventMessage.entity_id, output.comparatorPropertyValue);
                         event[output.comparatorPropertyValue] = state.value;
                     }
