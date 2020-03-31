@@ -17,6 +17,7 @@ module.exports = function (RED) {
         this.isenabled = true;
         this.nodeConfig = n;
         this.nodeConfig.hookProperty = this.nodeConfig.hookProperty || 'value';
+        node.nodeConfig.entityid = node.nodeConfig.entityid.trim();
 
         node.status({});
 

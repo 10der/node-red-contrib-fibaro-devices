@@ -157,7 +157,7 @@
         defaults: {
             name:                 { value: '' },
             server:               { value: '', type: 'fibaro-server', required: true },
-            entityid:             { value: '', required: true },
+            entityid:             { value: '', required: true, validate: RED.validators.number() },
             initOnStart:          { value: false },
             hookProperty:         { value: 'value' },
             debugenabled:         { value: false },
