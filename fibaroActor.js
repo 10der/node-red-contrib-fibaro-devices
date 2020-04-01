@@ -5,8 +5,8 @@ module.exports = function (RED) {
         var serverConfig = RED.nodes.getNode(n.server);
         var fibaro = serverConfig.client;
         var node = this;
-
         var events = n.events;
+        this.currentStatus = "...";
 
         node.status({});
 
@@ -35,29 +35,28 @@ module.exports = function (RED) {
 
         node.on('event', function (msg) {
             if (MyMessage(msg, this.deviceID)) {
-
                 node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
-                setTimeout(() => {
-                    node.status({});
-                }, 1000);
 
+                var event = {};
+                event.topic = String(msg.topic);
+                event.payload = msg.payload;
+                try { event.payload = JSON.parse(msg.payload); } // obj
+                catch (e) {/* */ }
                 if (events) {
-                    var event = {};
-                    event.topic = String(msg.topic);
-                    event.payload = msg.payload;
-                    try { event.payload = JSON.parse(msg.payload); } // obj
-                    catch (e) {/* */ }
                     event.passthrough = true; // mark message
                     if (typeof event.payload === 'object') {
                         node.send([null, event]);
                     } else {
-                        let value = event.payload;
                         node.send([event, null]);
-                        setTimeout(() => {
-                            node.status({ fill: 'green', shape: 'ring', text: `${value}` });
-                        }, 1000);
                     }
                 }
+
+                if (typeof event.payload === 'object') {
+                    // node.status({});
+                } else {
+                    this.currentStatus = event.payload;
+                }
+                node.status({ fill: 'gray', shape: 'ring', text: `${this.currentStatus}` });
             }
         });
 
@@ -65,10 +64,14 @@ module.exports = function (RED) {
             // it's my own message
             if (msg.passthrough) return;
 
-            node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
+            node.status({ fill: 'yellow', shape: 'ring', text: 'in' });
             setTimeout(() => {
-                node.status({});
+                node.status({ fill: 'gray', shape: 'ring', text: `${this.currentStatus}` });
             }, 1000);
+
+            // setTimeout(() => {
+            //     node.status({});
+            // }, 1000);
 
             var deviceID = this.deviceID;
             if (this.deviceID == 0) {

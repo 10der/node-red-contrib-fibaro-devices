@@ -42,11 +42,7 @@ module.exports = function (RED) {
                     if (typeof event.payload === 'object') {
                         node.send([null, event]);
                     } else {
-                        let value = event.payload;
                         node.send([event, null]);
-                        setTimeout(() => {
-                            node.status({ fill: 'green', shape: 'ring', text: `${value}` });
-                        }, 1000);
                     }
                 }
             }
