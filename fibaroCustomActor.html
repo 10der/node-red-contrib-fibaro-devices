@@ -4,7 +4,7 @@
         color: "GoldenRod",
         defaults: {
             name: { value: "" },
-            deviceID: { value: "0", required: true, validate: RED.validators.number() },
+            deviceID: { value: "0", required: true },
             server: { type: "fibaro-server", required: true },
             events: { value: false },
             payload: {
@@ -64,7 +64,7 @@
                         minLength: 0,
                         select: function (event, ui) {
                             $(this).val(ui.item.label);
-                            $("#node-input-deviceID").val(ui.item.value);
+                            $("#node-input-deviceID").val(ui.item.roomName+"/"+ui.item.name);
                             return false;
                         },
                         change: function (event, ui) {

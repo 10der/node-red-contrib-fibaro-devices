@@ -99,11 +99,6 @@ module.exports = function (RED) {
         }
 
         fibaro.on('events', function (message) {
-            // node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
-            // setTimeout(() => {
-            //     node.status({});
-            // }, 1000);
-
             processMessage(message);
         });
 
@@ -115,10 +110,11 @@ module.exports = function (RED) {
                 this.isenabled = false;
             }
 
-            // node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
-            // setTimeout(() => {
-            //     node.status({});
-            // }, 1000);
+            if (this.isenabled) {
+                node.status({ fill: 'greed', shape: 'ring', text: 'enabled' });
+            } else {
+                node.status({ fill: 'red', shape: 'ring', text: 'disabled' });
+            }
 
             processMessage(message);
         });

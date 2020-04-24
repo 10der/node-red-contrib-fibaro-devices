@@ -29,11 +29,11 @@ module.exports = function (RED) {
         node.on('input', function (msg) {
             var deviceID = this.deviceID;
             if (this.deviceID == 0) {
-                deviceID = String(msg.topic).split("/").reverse()[0];
+                deviceID = String(msg.topic);
             }
 
-            if (isNaN((parseInt(deviceID)))) {
-                fibaro.queryDevices(msg.topic, (result) => {
+            if (msg.events) {
+                fibaro.queryDeviceHistory(deviceID, msg.events, (result) => {
                     msg.currentState = result;
                     if (n.resultToPayload) {
                         msg.payload = result;
@@ -41,29 +41,29 @@ module.exports = function (RED) {
                     node.send(msg);
                     node.status({});
                 }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
-            } else {
-                if (msg.events) {
-                    fibaro.queryDeviceHistory(deviceID, msg.events, (result) => {
-                        msg.currentState = result;
+            } else if (deviceID.includes("=")) {
+                fibaro.queryDevices(deviceID, (currentState) => {
+                    msg.currentState = currentState;
+                    if (property == "value") {
                         if (n.resultToPayload) {
-                            msg.payload = result;
+                            msg.payload = currentState.value;
                         }
-                        node.send(msg);
-                        node.status({});
-                    }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
-                } else {
-                    var property = msg.property || 'value';
-                    fibaro.queryState(deviceID, property, (currentState) => {
-                        msg.currentState = currentState;
-                        if (property == "value") {
-                            if (n.resultToPayload) {
-                                msg.payload = currentState.value;
-                            }
+                    }
+                    node.send(msg);
+                    node.status({});
+                }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
+            } else {
+                var property = msg.property || 'value';
+                fibaro.queryState(deviceID, property, (currentState) => {
+                    msg.currentState = currentState;
+                    if (property == "value") {
+                        if (n.resultToPayload) {
+                            msg.payload = currentState.value;
                         }
-                        node.send(msg);
-                        node.status({});
-                    }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
-                }
+                    }
+                    node.send(msg);
+                    node.status({});
+                }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
             }
         });
     }

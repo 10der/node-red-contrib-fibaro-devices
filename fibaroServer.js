@@ -75,7 +75,7 @@ module.exports = function (RED) {
                       let roomName = 'undefined';
                       const room = rooms.find(o => o.id == item.roomID);
                       if (room) roomName = room.name;
-                      return { label: `${item.name} (${roomName})`, value: item.id };
+                      return { label: `${item.name} (${roomName})`, value: item.id, name: item.name,  roomName: roomName};
                     });
                     res.json(devices);
                   } catch (e) {

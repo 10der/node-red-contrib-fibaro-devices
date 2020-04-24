@@ -43,7 +43,7 @@ module.exports = function (RED) {
                     }
                 }
                 devices.forEach(deviceID => {
-                    if (deviceID != 0 && !isNaN(deviceID)) {
+                    if (deviceID != 0) {
                         fibaro.addDevice(n.id, String(deviceID));
                     }
                 });
@@ -101,7 +101,7 @@ module.exports = function (RED) {
         });
 
         devices.forEach(deviceID => {
-            if (deviceID != 0 && !isNaN(deviceID)) {
+            if (deviceID != 0) {
                 fibaro.addDevice(n.id, String(deviceID));
             }
         });

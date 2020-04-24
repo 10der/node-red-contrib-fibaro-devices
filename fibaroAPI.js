@@ -17,6 +17,9 @@ var FibaroAPI = function (ipaddress, login, password) {
     this.nodes = [];
     this.globals = [];
     this.states = {};
+    this.rooms = [];
+    this.devices = [];
+
     events.EventEmitter.call(this);
     this.setMaxListeners(0);
 }
@@ -41,6 +44,14 @@ FibaroAPI.prototype.validateConfig = function validateConfig() {
         return false;
     }
     return true;
+}
+
+FibaroAPI.prototype.addDevice = function addDevice(nodeId, deviceID) {
+    this.nodes.push({ nodeId: nodeId, deviceID: String(deviceID), initialized: false });
+}
+
+FibaroAPI.prototype.removeDevice = function removeDevice(nodeId) {
+    this.nodes = this.nodes.filter(item => item.nodeId !== nodeId)
 }
 
 FibaroAPI.prototype.createRequest = function createRequest(query) {
@@ -71,6 +82,52 @@ FibaroAPI.prototype.createRequest = function createRequest(query) {
 
     return request;
 }
+/*
+const fetchWithRetry = (url, numberOfRetry, fetchOptions = {}) => {
+    return new Promise((resolve, reject) => {
+        let attempts = 1;
+
+        const fetch_retry = (url, n, fetchOptions) => {
+
+            return fetch(url, fetchOptions).then(res => {
+
+                const status = res.status;
+
+                if (status === 200) {
+                    return resolve(res);
+                }
+                else if (n === 1) {
+                    throw reject("Error in getting http data");
+                }
+                else {
+                    console.log("Retry again: Got back " + status);
+                    console.log("With delay " + attempts * 3000);
+                    setTimeout(() => {
+                        attempts++;
+
+                        fetch_retry(url, n - 1);
+                    }, attempts * 3000);
+                }
+            }).catch(function (error) {
+                if (n === 1) {
+                    reject(error)
+                }
+                else {
+                    setTimeout(() => {
+                        attempts++
+                        fetch_retry(url, n - 1);
+                    }, attempts * 3000);
+                }
+            });
+        }
+        return fetch_retry(url, numberOfRetry);
+    });
+}
+*/
+
+// fetchWithRetry("https://httpbin.org/status/200,408", 3).then(x => console.log("Finally " + x.status)).catch(e => {
+//     console.log(e);
+// });
 
 FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
     var _api = this;
@@ -97,6 +154,7 @@ FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
             callback(json)
         )
         .catch(err => {
+            console.debug(err, request);
             if (error)
                 error({
                     code: err.code, text: "HTTP error"
@@ -150,15 +208,72 @@ FibaroAPI.prototype.init = function init() {
     })
 }
 
-FibaroAPI.prototype.addDevice = function addDevice(nodeId, deviceID) {
-    this.nodes.push({ nodeId: nodeId, deviceID: String(deviceID), initialized: false });
+// if "direction: then from int to nickname
+FibaroAPI.prototype.translateDeviceID = function translateDeviceID(deviceID, direction) {
+    if (typeof deviceID === 'undefined' || deviceID === null) {
+        return null;
+    }
+    if (direction) {
+        if (!isNaN(deviceID)) {
+            let device = this.devices.find(_ => _.id == deviceID);
+            if (device) {
+                let room = this.rooms.find(_ => _.id == device.roomID);
+                if (room) {
+                    return room.name + "/" + device.name;
+                } else {
+                    return device.name;
+                }
+            }
+            console.error('Cannot be translated to nickname: ', deviceID);
+            return null;
+        } else {
+            return deviceID;
+        }
+    } else {
+        if (isNaN(deviceID)) {
+            // xlat
+            var res = deviceID.split("/");
+            if (res.length == 2) {
+                // find room
+                var room = this.rooms.find(_ => _.name == res[0]);
+                if (room) {
+                    // find dive by room
+                    let device = this.devices.find(_ => _.name == res[1] && _.roomID == room.id);
+                    if (device) {
+                        return device.id;
+                    }
+                }
+            } else if (res.length == 1) {
+                // find by device name
+                let device = this.devices.find(_ => _.name == res[0]);
+                if (device) {
+                    return device.id;
+                }
+            }
+            // error
+            console.error('Cannot be translated to DeviceID: ', deviceID);
+            return null;
+        } else {
+            return deviceID;
+        }
+    }
 }
 
-FibaroAPI.prototype.removeDevice = function removeDevice(nodeId) {
-    this.nodes = this.nodes.filter(item => item.nodeId !== nodeId)
-}
+// _api.sendRequest(`/devices/?name=${encodeURIComponent(name)}&roomID=${encodeURIComponent(roomID)}`,
+// (data) => {
+//     if (data.length == 1) {
+//         return data[0].id;
+//     } else {
+//         console.error('Cannot be translated: ', nodeId, deviceID);
+//         return;
+//     }
+// },
+// (error) => {
+//     console.debug('error', { text: `device data error: ${error.code}`, error: error });
+// }
+// );
 
-FibaroAPI.prototype.poll = function poll() {
+FibaroAPI.prototype.pollDevices = function pollDevices() {
     var _api = this;
 
     if (!_api.validateConfig()) {
@@ -192,6 +307,15 @@ FibaroAPI.prototype.poll = function poll() {
         (error) => {
             _api.emit('error', { text: `poll devices data error: ${error.code}`, error: error });
         });
+}
+
+FibaroAPI.prototype.pollGlobals = function pollGlobals() {
+    var _api = this;
+
+    if (!_api.validateConfig()) {
+        _api.emit('error', { text: 'config node is not configured' });
+        return
+    }
 
     _api.sendRequest(`/globalVariables`,
         (data) => {
@@ -221,7 +345,12 @@ FibaroAPI.prototype.poll = function poll() {
         (error) => {
             _api.emit('error', { text: `poll globalVariables data error: ${error.code}`, error: error });
         });
+}
 
+FibaroAPI.prototype.poll = function poll() {
+    var _api = this;
+    _api.pollDevices();
+    _api.pollGlobals();
 }
 
 FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
@@ -257,6 +386,11 @@ FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
 
 FibaroAPI.prototype.queryDeviceHistory = function queryDeviceHistory(deviceID, query, callback, error) {
     var _api = this;
+
+    if (isNaN(deviceID)) {
+        deviceID = _api.translateDeviceID(deviceID);
+    }
+
     var path = `/panels/event?deviceID=${deviceID}&${query}`;
     _api.sendRequest(path,
         (data) => {
@@ -296,16 +430,19 @@ FibaroAPI.prototype.queryDevices = function queryDevices(query, callback, error)
 
 FibaroAPI.prototype.queryStateAsync = async function queryStateAsync(deviceID, property) {
     var _api = this;
-    // /api/devices/969/properties/value
-    // const cached = _api.states[Number(deviceID)];
-    // if (property == "value" && cached) {
-    //     return { value: cached.newValue };
-    // }
+    if (isNaN(deviceID)) {
+        deviceID = _api.translateDeviceID(deviceID);
+    }
     return await _api.sendRequestAsync(`/devices/${deviceID}/properties/${property}`)
 }
 
 FibaroAPI.prototype.queryState = function queryState(deviceID, property, callback, error) {
     var _api = this;
+
+    if (isNaN(deviceID)) {
+        deviceID = _api.translateDeviceID(deviceID);
+    }
+
     // /api/devices/969/properties/value
     _api.sendRequest(`/devices/${deviceID}/properties/${property}`,
         (data) => {

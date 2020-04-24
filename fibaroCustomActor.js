@@ -56,7 +56,7 @@ module.exports = function (RED) {
 
             var deviceID = this.deviceID;
             if (this.deviceID == 0) {
-                deviceID = String(msg.topic).split("/").reverse()[0];
+                deviceID = String(msg.topic);
             }
 
             var payload = msg.payload;
@@ -99,7 +99,10 @@ module.exports = function (RED) {
     }
 
     function MyMessage(msg, deviceID) {
-        return (String(msg.topic).split("/").reverse()[0] == deviceID);
+        if ((String(msg.topic) == deviceID)) {
+            // TODO
+        }
+        return true;
     }
 
     RED.nodes.registerType("fibaroXActor", fibaroCustomActor);

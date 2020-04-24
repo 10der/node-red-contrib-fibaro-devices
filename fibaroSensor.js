@@ -53,7 +53,10 @@ module.exports = function (RED) {
     }
 
     function MyMessage(msg, deviceID) {
-        return (String(msg.topic).split("/").reverse()[0] == deviceID);
+        if ((String(msg.topic) == deviceID)) {
+            // TODO
+        }
+        return true;
     }
 
     RED.nodes.registerType("fibaroSensor", FibaroSensor);

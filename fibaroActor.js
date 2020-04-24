@@ -19,16 +19,6 @@ module.exports = function (RED) {
             node.error("Node configuration is not found!");
         }
 
-        // do not SPAM ZWave packets!
-        var checkState = function (value, deviceID, property, func) {
-            fibaro.queryState(deviceID, property, (currentState) => {
-                // console.debug(msg.payload, currentState.value, msg.payload != currentState.value);
-                if (value != currentState.value) {
-                    func();
-                }
-            });
-        }
-
         this.on("close", function () {
             fibaro.emit('done', n.id);
         });
@@ -69,13 +59,9 @@ module.exports = function (RED) {
                 node.status({ fill: 'gray', shape: 'ring', text: `${this.currentStatus}` });
             }, 1000);
 
-            // setTimeout(() => {
-            //     node.status({});
-            // }, 1000);
-
             var deviceID = this.deviceID;
             if (this.deviceID == 0) {
-                deviceID = String(msg.topic).split("/").reverse()[0];
+                deviceID = String(msg.topic);
             }
 
             var payload = msg.payload;
@@ -88,12 +74,10 @@ module.exports = function (RED) {
             if (typeof payload == "boolean") {
                 // binarySwitch
                 var action = payload ? "turnOn" : "turnOff";
-                checkState(Number(msg.payload), deviceID, 'value',
-                    () => fibaro.callAPI("callAction", { deviceID: deviceID, name: action }));
+                fibaro.callAPI("callAction", { deviceID: deviceID, name: action });
             } else if (typeof msg.payload == "number") {
                 // multiLevelSwitch
-                checkState(msg.payload, deviceID, 'value',
-                    () => fibaro.callAPI("callAction", { deviceID: deviceID, name: "setValue", arg1: payload }));
+                fibaro.callAPI("callAction", { deviceID: deviceID, name: "setValue", arg1: payload });
             } else if (typeof payload === 'string') {
                 // callAction name as string
                 payload.deviceID = deviceID
@@ -114,7 +98,10 @@ module.exports = function (RED) {
     }
 
     function MyMessage(msg, deviceID) {
-        return (String(msg.topic).split("/").reverse()[0] == deviceID);
+        if ((String(msg.topic) == deviceID)) {
+            // TODO
+        }
+        return true;
     }
 
     RED.nodes.registerType("fibaroActor", FibaroActor);
