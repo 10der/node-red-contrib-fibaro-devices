@@ -74,6 +74,10 @@ module.exports = function (RED) {
             }, 2000);
         });
 
+        fibaro.on('warn', function (warn) {
+            node.warn(warn.text);
+        });
+
         fibaro.on('error', function (error) {
             if (node.initialized && error.error.code == 401) {
                 node.initialized = false;

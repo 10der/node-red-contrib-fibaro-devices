@@ -27,12 +27,16 @@ module.exports = function (RED) {
         // query devices
         // msg.topic = "visible=true&enabled=true&interface=light&property=[isLight,true]";
         node.on('input', function (msg) {
+
             var deviceID = this.deviceID;
             if (this.deviceID == 0) {
                 deviceID = String(msg.topic);
             }
 
             if (msg.events) {
+                let orgDeviceID = fibaro.translateDeviceID(deviceID);
+                if (orgDeviceID) deviceID = orgDeviceID;
+    
                 fibaro.queryDeviceHistory(deviceID, msg.events, (result) => {
                     msg.currentState = result;
                     if (n.resultToPayload) {
@@ -51,6 +55,9 @@ module.exports = function (RED) {
                     node.status({});
                 }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
             } else {
+                let orgDeviceID = fibaro.translateDeviceID(deviceID);
+                if (orgDeviceID) deviceID = orgDeviceID;
+    
                 var property = msg.property || 'value';
                 fibaro.queryState(deviceID, property, (currentState) => {
                     msg.currentState = currentState;

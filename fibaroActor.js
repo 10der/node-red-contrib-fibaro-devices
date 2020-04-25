@@ -71,6 +71,9 @@ module.exports = function (RED) {
                 // Ignore malformed
             }
 
+            var orgDeviceID = fibaro.translateDeviceID(deviceID);
+            if (orgDeviceID) deviceID = orgDeviceID;
+
             if (typeof payload == "boolean") {
                 // binarySwitch
                 var action = payload ? "turnOn" : "turnOff";

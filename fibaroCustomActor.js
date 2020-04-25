@@ -59,6 +59,9 @@ module.exports = function (RED) {
                 deviceID = String(msg.topic);
             }
 
+            var orgDeviceID = fibaro.translateDeviceID(deviceID);
+            if (orgDeviceID) deviceID = orgDeviceID;
+
             var payload = msg.payload;
             try {
                 payload = JSON.parse(payload);

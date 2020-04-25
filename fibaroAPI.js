@@ -210,11 +210,21 @@ FibaroAPI.prototype.init = function init() {
 
 // if "direction: then from int to nickname
 FibaroAPI.prototype.translateDeviceID = function translateDeviceID(deviceID, direction) {
+    var _api = this;
+
     if (typeof deviceID === 'undefined' || deviceID === null) {
         return null;
     }
+
     if (direction) {
         if (!isNaN(deviceID)) {
+            if (_api.devices.length === 0) {
+                // not initialized yet!
+                _api.emit('warn', { text: `HC node is not initialized!: ${deviceID}` });
+                console.error('HC node is not initialized!');
+                return null;
+            }
+
             let device = this.devices.find(_ => _.id == deviceID);
             if (device) {
                 let room = this.rooms.find(_ => _.id == device.roomID);
@@ -224,6 +234,7 @@ FibaroAPI.prototype.translateDeviceID = function translateDeviceID(deviceID, dir
                     return device.name;
                 }
             }
+            _api.emit('warn', { text: `Cannot be translated to nickname: ${deviceID}` });
             console.error('Cannot be translated to nickname: ', deviceID);
             return null;
         } else {
@@ -231,6 +242,12 @@ FibaroAPI.prototype.translateDeviceID = function translateDeviceID(deviceID, dir
         }
     } else {
         if (isNaN(deviceID)) {
+            if (_api.devices.length === 0) {
+                // not initialized yet!
+                _api.emit('warn', { text: `HC node is not initialized!: ${deviceID}` });
+                console.error('HC node is not initialized!');
+                return null;
+            }
             // xlat
             var res = deviceID.split("/");
             if (res.length == 2) {
@@ -239,8 +256,9 @@ FibaroAPI.prototype.translateDeviceID = function translateDeviceID(deviceID, dir
                 if (room) {
                     // find dive by room
                     let devices = this.devices.filter(_ => _.name == res[1] && _.roomID == room.id && _.parentId != 1 && _.enabled && _.visible);
-                    if (devices) {
+                    if (devices.length) {
                         if (devices.length != 1) {
+                            _api.emit('warn', { text: `Device on/on ambiguities: ${deviceID}` });
                             console.error('Device on/on ambiguities: ', deviceID);
                             return null;
                         }
@@ -250,8 +268,9 @@ FibaroAPI.prototype.translateDeviceID = function translateDeviceID(deviceID, dir
             } else if (res.length == 1) {
                 // find by device name
                 let devices = this.devices.filter(_ => _.name == res[0] && _.parentId != 1 && _.enabled && _.visible);
-                if (devices) {
+                if (devices.length) {
                     if (devices.length != 1) {
+                        _api.emit('warn', { text: `Device on/on ambiguities: ${deviceID}` });
                         console.error('Device on/on ambiguities: ', deviceID);
                         return null;
                     }
@@ -259,6 +278,7 @@ FibaroAPI.prototype.translateDeviceID = function translateDeviceID(deviceID, dir
                 }
             }
             // error
+            _api.emit('warn', { text: `Cannot be translated to DeviceID: ${deviceID}` });
             console.error('Cannot be translated to DeviceID: ', deviceID);
             return null;
         } else {
@@ -368,6 +388,10 @@ FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
         // HC is not configured
         return
     }
+
+    // Object.keys(args).forEach(function (key) {
+    // });
+
 
     try {
         let q = new URLSearchParams(args).toString();
