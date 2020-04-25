@@ -238,16 +238,24 @@ FibaroAPI.prototype.translateDeviceID = function translateDeviceID(deviceID, dir
                 var room = this.rooms.find(_ => _.name == res[0]);
                 if (room) {
                     // find dive by room
-                    let device = this.devices.find(_ => _.name == res[1] && _.roomID == room.id);
-                    if (device) {
-                        return device.id;
+                    let devices = this.devices.filter(_ => _.name == res[1] && _.roomID == room.id && _.parentId != 1 && _.enabled && _.visible);
+                    if (devices) {
+                        if (devices.length != 1) {
+                            console.error('Device on/on ambiguities: ', deviceID);
+                            return null;
+                        }
+                        return devices[0].id;
                     }
                 }
             } else if (res.length == 1) {
                 // find by device name
-                let device = this.devices.find(_ => _.name == res[0]);
-                if (device) {
-                    return device.id;
+                let devices = this.devices.filter(_ => _.name == res[0] && _.parentId != 1 && _.enabled && _.visible);
+                if (devices) {
+                    if (devices.length != 1) {
+                        console.error('Device on/on ambiguities: ', deviceID);
+                        return null;
+                    }
+                    return devices[0].id;
                 }
             }
             // error

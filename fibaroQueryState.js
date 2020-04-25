@@ -44,10 +44,8 @@ module.exports = function (RED) {
             } else if (deviceID.includes("=")) {
                 fibaro.queryDevices(deviceID, (currentState) => {
                     msg.currentState = currentState;
-                    if (property == "value") {
-                        if (n.resultToPayload) {
-                            msg.payload = currentState.value;
-                        }
+                    if (n.resultToPayload) {
+                        msg.payload = currentState.value;
                     }
                     node.send(msg);
                     node.status({});
