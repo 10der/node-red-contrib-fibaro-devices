@@ -2,6 +2,9 @@ module.exports = function (RED) {
     function fibaroCustomActor(n) {
         RED.nodes.createNode(this, n);
         this.deviceID = n.deviceID;
+        if (this.deviceID === "") {
+            this.deviceID = "0";
+        }
         var serverConfig = RED.nodes.getNode(n.server);
         var fibaro = serverConfig.client;
         var node = this;
@@ -34,7 +37,10 @@ module.exports = function (RED) {
 
                 if (events) {
                     var event = {};
-                    event.topic = String(msg.topic);
+                    event.topic = String(n.deviceID);
+                    if (n.deviceID == 0) {
+                        event.topic = String(msg.topic);
+                    }
                     event.payload = msg.payload;
                     try { event.payload = JSON.parse(msg.payload); } // obj
                     catch (e) {/* */ }
