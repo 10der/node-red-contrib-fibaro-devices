@@ -68,7 +68,7 @@
             "fibaroActor": "fibaroActor.js",
             "fibaroCustomActor": "fibaroCustomActor.js",
             "fibaroEventsDevice": "fibaroEventsDevice.js",
-            "trigger-state": "extensions/trigger-state.js"
+            "fibaroTriggerEvents": "extensions/fibaroTriggerEvents.js"
         }
     },
     "license": "MIT"

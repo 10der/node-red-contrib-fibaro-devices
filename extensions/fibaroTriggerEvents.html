@@ -1,4 +1,4 @@
-<script type="text/x-red" data-template-name="trigger-state">
+<script type="text/x-red" data-template-name="trigger-event">
     <!-- Name -->
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
@@ -151,7 +151,7 @@
 
 
 <script type="text/javascript">
-    RED.nodes.registerType('trigger-state', {
+    RED.nodes.registerType('trigger-event', {
         category: 'FIBARO',
         color:    '#038FC7',
         defaults: {
@@ -186,7 +186,7 @@
         },
         icon:          "trigger.png",
         paletteLabel:  'trigger: state',
-        label:         function() { return this.name || `trigger-state: ${this.entityid}` },
+        label:         function() { return this.name || `trigger-event: ${this.entityid}` },
         oneditprepare: function () {
             // Outputs List
             let NODE = this;
@@ -511,7 +511,7 @@
 
 
 
-<script type="text/x-red" data-help-name="trigger-state">
+<script type="text/x-red" data-help-name="trigger-event">
     <p>Advanced version of 'server:state-changed' node</p>
 
     <h3>Inputs</h3>
