@@ -70,7 +70,7 @@ module.exports = function (RED) {
                 (data) => {
                   try {
                     let devices = data;
-                    devices = devices.filter(device => (device.enabled && device.visible && device.parentId > 1));
+                    devices = devices.filter(device => (device.enabled && device.visible && device.parentId != 1));
                     devices = devices.map((item) => {
                       let roomName = 'undefined';
                       const room = rooms.find(o => o.id == item.roomID);
