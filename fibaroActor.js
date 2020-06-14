@@ -50,7 +50,7 @@ module.exports = function (RED) {
                 if (typeof event.payload === 'object') {
                     // node.status({});
                 } else {
-                    this.currentStatus = event.payload;
+                    this.currentStatus   = event.payload;
                 }
                 node.status({ fill: 'gray', shape: 'ring', text: `${this.currentStatus}` });
             }

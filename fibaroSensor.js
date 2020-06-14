@@ -25,13 +25,7 @@ module.exports = function (RED) {
         });
 
         node.on('event', function (msg) {
-            if (MyMessage(msg, n.deviceID)) {
-
-                node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
-                setTimeout(() => {
-                    node.status({});
-                }, 1000);
-
+            if (MyMessage(msg, n.deviceID)) {                
                 var event = {};
                 event.topic = String(n.deviceID);
                 if (n.deviceID == 0) {
@@ -41,7 +35,7 @@ module.exports = function (RED) {
                 try { event.payload = JSON.parse(event.payload); } // obj
                 catch (e) {/* */ }
                 if (typeof event.payload === 'object') {
-                    node.send([null, event]);
+                    node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
                 } else {
                     let value = event.payload;
                     node.send([event, null]);
