@@ -43,7 +43,7 @@ FibaroAPI.prototype.validateConfig = function validateConfig() {
     if (!hasIpAddress) {
         return false;
     }
-    return true;
+    return true;    
 }
 
 FibaroAPI.prototype.addDevice = function addDevice(nodeId, deviceID) {

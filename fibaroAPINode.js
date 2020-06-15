@@ -174,7 +174,7 @@ module.exports = function (RED) {
                 // console.debug(`init node: ${item.nodeId} with device: ${item.deviceID}`);
                 var target = RED.nodes.getNode(item.nodeId);
                 if (target) {
-                    var orgDeviceID = fibaro.translateDeviceID(target.deviceID);
+                    var orgDeviceID = fibaro.translateDeviceID(item.deviceID);
                     fibaro.queryState(orgDeviceID, 'value', (currentState) => {
                         let event = {};
                         event.topic = `${item.deviceID}`;
