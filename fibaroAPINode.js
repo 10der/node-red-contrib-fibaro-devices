@@ -50,6 +50,7 @@ module.exports = function (RED) {
                         fibaro.devices = devices;
                         node.send([null, { topic: "/devices", payload: devices }]);
                         node.initialized = true;
+                        fibaro.isReady = true;
                     }, (e) => node.error(e))
                 }, (e) => node.error(e))
             }, (e) => node.error(e))

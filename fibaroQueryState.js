@@ -1,23 +1,11 @@
+const BaseNode = require('./fibaroBaseNode.js');
+
 module.exports = function (RED) {
-    function FibaroQueryState(n) {
-        RED.nodes.createNode(this, n);
-        this.deviceID = n.deviceID;
-        if (this.deviceID === "") {
-            this.deviceID = "0";
-        }
-        var serverConfig = RED.nodes.getNode(n.server);
-        var fibaro = serverConfig.client;
-        var node = this;
 
-        node.status({});
-
-        if (serverConfig) {
-            if (!serverConfig.validateConfig(node)) {
-                node.error("Node has invalid configuration");
-                return
-            }
-        } else {
-            node.error("Node configuration is not found!");
+    class FibaroQueryState extends BaseNode {
+        constructor(n) {
+            super(n, RED);
+            this.resultToPayload = n.resultToPayload;
         }
 
         // get prop with name value
@@ -29,51 +17,50 @@ module.exports = function (RED) {
 
         // query devices
         // msg.topic = "visible=true&enabled=true&interface=light&property=[isLight,true]";
-        node.on('input', function (msg) {
-
+        onInput(msg) {
             var deviceID = this.deviceID;
             if (this.deviceID == 0) {
                 deviceID = String(msg.topic);
             }
 
             if (msg.events) {
-                let orgDeviceID = fibaro.translateDeviceID(deviceID);
+                let orgDeviceID = this.fibaro.translateDeviceID(deviceID);
                 if (orgDeviceID) deviceID = orgDeviceID;
-    
-                fibaro.queryDeviceHistory(deviceID, msg.events, (result) => {
+
+                this.fibaro.queryDeviceHistory(deviceID, msg.events, (result) => {
                     msg.currentState = result;
-                    if (n.resultToPayload) {
+                    if (this.resultToPayload) {
                         msg.payload = result;
                     }
-                    node.send(msg);
-                    node.status({});
-                }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
+                    this.node.send(msg);
+                    this.node.status({});
+                }, (error) => this.node.status({ fill: "red", shape: "dot", text: error.text }));
             } else if (deviceID.includes("=")) {
-                fibaro.queryDevices(deviceID, (currentState) => {
+                this.fibaro.queryDevices(deviceID, (currentState) => {
                     msg.currentState = currentState;
-                    if (n.resultToPayload) {
+                    if (this.resultToPayload) {
                         msg.payload = currentState.value;
                     }
-                    node.send(msg);
-                    node.status({});
-                }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
+                    this.node.send(msg);
+                    this.node.status({});
+                }, (error) => this.node.status({ fill: "red", shape: "dot", text: error.text }));
             } else {
-                let orgDeviceID = fibaro.translateDeviceID(deviceID);
+                let orgDeviceID = this.fibaro.translateDeviceID(deviceID);
                 if (orgDeviceID) deviceID = orgDeviceID;
-    
+
                 var property = msg.property || 'value';
-                fibaro.queryState(deviceID, property, (currentState) => {
+                this.fibaro.queryState(deviceID, property, (currentState) => {
                     msg.currentState = currentState;
                     if (property == "value") {
-                        if (n.resultToPayload) {
+                        if (this.resultToPayload) {
                             msg.payload = currentState.value;
                         }
                     }
-                    node.send(msg);
-                    node.status({});
-                }, (error) => node.status({ fill: "red", shape: "dot", text: error.text }));
+                    this.node.send(msg);
+                    this.node.status({});
+                }, (error) => this.node.status({ fill: "red", shape: "dot", text: error.text }));
             }
-        });
+        }
     }
 
     RED.nodes.registerType("fibaroQuery", FibaroQueryState);

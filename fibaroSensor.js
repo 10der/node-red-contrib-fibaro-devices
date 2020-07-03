@@ -1,62 +1,31 @@
+const BaseNode = require('./fibaroBaseNode.js');
+
 module.exports = function (RED) {
-    function FibaroSensor(n) {
-        RED.nodes.createNode(this, n);
-        this.deviceID = n.deviceID;
-        if (this.deviceID === "") {
-            this.deviceID = "0";
+    class FibaroSensor extends BaseNode {
+        constructor(n) {
+            super(n, RED);
+            this.events = n.events;
         }
-        var serverConfig = RED.nodes.getNode(n.server);
-        var fibaro = serverConfig.client;
-        var node = this;
 
-        node.status({});
-
-        if (serverConfig) {
-            if (!serverConfig.validateConfig(node)) {
-                node.error("Node has invalid configuration");
-                return
+        onEvent(msg) {
+            var event = {};
+            event.topic = String(this.deviceID);
+            if (this.deviceID == 0) {
+                event.topic = String(msg.topic);
             }
-        } else {
-            node.error("Node configuration is not found!");
-        }
-
-        this.on("close", function () {
-            fibaro.emit('done', n.id);
-        });
-
-        node.on('event', function (msg) {
-            if (MyMessage(msg, n.deviceID)) {                
-                var event = {};
-                event.topic = String(n.deviceID);
-                if (n.deviceID == 0) {
-                    event.topic = String(msg.topic);
-                }
-                event.payload = msg.payload;
-                try { event.payload = JSON.parse(event.payload); } // obj
-                catch (e) {/* */ }
-                if (typeof event.payload === 'object') {
-                    node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
-                } else {
-                    let value = event.payload;
-                    node.send([event, null]);
-                    setTimeout(() => {
-                        node.status({ fill: 'green', shape: 'ring', text: `${value}` });
-                    }, 1000);
-                }
+            event.payload = msg.payload;
+            try { event.payload = JSON.parse(event.payload); } // obj
+            catch (e) {/* */ }
+            if (typeof event.payload === 'object') {
+                this.node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
+            } else {
+                let value = event.payload;
+                this.node.send([event, null]);
+                setTimeout(() => {
+                    this.node.status({ fill: 'green', shape: 'ring', text: `${value}` });
+                }, 1000);
             }
-        });
-
-        // register device
-        if (this.deviceID != 0) {
-            fibaro.addDevice(n.id, n.deviceID);
         }
-    }
-
-    function MyMessage(msg, deviceID) {
-        if ((String(msg.topic) == deviceID)) {
-            // TODO
-        }
-        return true;
     }
 
     RED.nodes.registerType("fibaroSensor", FibaroSensor);

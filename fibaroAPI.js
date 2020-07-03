@@ -19,6 +19,7 @@ var FibaroAPI = function (ipaddress, login, password) {
     this.states = {};
     this.rooms = [];
     this.devices = [];
+    this.isReady = false;
 
     events.EventEmitter.call(this);
     this.setMaxListeners(0);
@@ -241,9 +242,22 @@ FibaroAPI.prototype.translateDeviceID = function translateDeviceID(deviceID, dir
             return deviceID;
         }
     } else {
-        if (isNaN(deviceID)) {
+        if (isNaN(deviceID)) {            
             if (_api.devices.length === 0) {
                 // not initialized yet!
+                // var fres = deviceID.split("/");
+                // if (fres.length == 2) {
+                //     _api.sendRequest("/devices/?name=" + encodeURIComponent(fres[1]),
+                //     (data) => {
+                //         if (data.length) {
+                //             if (data.length != 1) {
+                //                 return data[0].id;
+                //             }
+                //         }
+                //     }, (e) => {
+                //         console.debug(e);
+                //     });
+                // }
                 _api.emit('warn', { text: `HC node is not initialized!: ${deviceID}` });
                 console.error('HC node is not initialized!');
                 return null;

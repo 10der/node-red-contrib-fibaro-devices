@@ -1,63 +1,41 @@
+const BaseNode = require('./fibaroBaseNode.js');
+
 module.exports = function (RED) {
-    function fibaroCustomActor(n) {
-        RED.nodes.createNode(this, n);
-        this.deviceID = n.deviceID;
-        if (this.deviceID === "") {
-            this.deviceID = "0";
-        }
-        var serverConfig = RED.nodes.getNode(n.server);
-        var fibaro = serverConfig.client;
-        var node = this;
-
-        var events = n.events;
-        var customActions = n.payload ? JSON.parse(n.payload) : {};
-
-        node.status({});
-
-        if (serverConfig) {
-            if (!serverConfig.validateConfig(node)) {
-                node.error("Node has invalid configuration");
-                return
-            }
-        } else {
-            node.error("Node configuration is not found!");
+    class fibaroCustomActor extends BaseNode {
+        constructor(n) {
+            super(n, RED);
+            this.events = n.events;
+            this.customActions = n.payload ? JSON.parse(n.payload) : {};
         }
 
-        this.on("close", function () {
-            fibaro.emit('done', n.id);
-        });
+        onInput(msg) {
+            this.node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
+            setTimeout(() => {
+                this.node.status({});
+            }, 1000);
 
-        node.on('event', function (msg) {
-            if (MyMessage(msg, this.deviceID)) {
-
-                node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
-                setTimeout(() => {
-                    node.status({});
-                }, 1000);
-
-                if (events) {
-                    var event = {};
-                    event.topic = String(n.deviceID);
-                    if (n.deviceID == 0) {
-                        event.topic = String(msg.topic);
-                    }
-                    event.payload = msg.payload;
-                    try { event.payload = JSON.parse(msg.payload); } // obj
-                    catch (e) {/* */ }
-                    event.passthrough = true; // mark message
-                    if (typeof event.payload === 'object') {
-                        node.send([null, event]);
-                    } else {
-                        node.send([event, null]);
-                    }
+            if (this.events) {
+                var event = {};
+                event.topic = String(this.deviceID);
+                if (this.deviceID == 0) {
+                    event.topic = String(msg.topic);
+                }
+                event.payload = msg.payload;
+                try { event.payload = JSON.parse(msg.payload); } // obj
+                catch (e) {/* */ }
+                event.passthrough = true; // mark message
+                if (typeof event.payload === 'object') {
+                    this.node.send([null, event]);
+                } else {
+                    this.node.send([event, null]);
                 }
             }
-        });
+        }
 
-        node.on('input', function (msg) {
-            node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
+        onEvent(msg) {
+            this.node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
             setTimeout(() => {
-                node.status({});
+                this.node.status({});
             }, 1000);
 
             var deviceID = this.deviceID;
@@ -65,7 +43,7 @@ module.exports = function (RED) {
                 deviceID = String(msg.topic);
             }
 
-            var orgDeviceID = fibaro.translateDeviceID(deviceID);
+            var orgDeviceID = this.fibaro.translateDeviceID(deviceID);
             if (orgDeviceID) deviceID = orgDeviceID;
 
             var payload = msg.payload;
@@ -79,15 +57,15 @@ module.exports = function (RED) {
                 // customAction from payload
                 // console.debug(payload);
                 payload.deviceID = deviceID;
-                fibaro.callAPI("callAction", payload);
+                this.fibaro.callAPI("callAction", payload);
             } else if (typeof payload === 'string') {
                 // custom action by name
-                if (customActions) {
-                    var command = customActions[payload];
+                if (this.customActions) {
+                    var command = this.customActions[payload];
                     if (command) {
                         command.deviceID = deviceID;
                         // console.debug(command);
-                        fibaro.callAPI("callAction", command);
+                        this.fibaro.callAPI("callAction", command);
                     } else {
                         console.debug("unknown action", payload);
                     }
@@ -99,19 +77,7 @@ module.exports = function (RED) {
                 // error action
                 console.debug("error action!");
             }
-        });
-
-        // register device
-        if (this.deviceID != 0) {
-            fibaro.addDevice(n.id, n.deviceID);
         }
-    }
-
-    function MyMessage(msg, deviceID) {
-        if ((String(msg.topic) == deviceID)) {
-            // TODO
-        }
-        return true;
     }
 
     RED.nodes.registerType("fibaroXActor", fibaroCustomActor);
