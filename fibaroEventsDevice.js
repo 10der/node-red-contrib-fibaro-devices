@@ -12,6 +12,12 @@ module.exports = function (RED) {
             } catch (err) {
                 // nothing
             }
+
+            this.devices.forEach(deviceID => {
+                if (deviceID != 0) {
+                    this.fibaro.addDevice(n.id, String(deviceID));
+                }
+            });
         }
 
         // respond to inputs....
@@ -92,12 +98,6 @@ module.exports = function (RED) {
                 this.node.send([event, null]);
             }
         }
-
-        // devices.forEach(deviceID => {
-        //     if (deviceID != 0) {
-        //         fibaro.addDevice(n.id, String(deviceID));
-        //     }
-        // });
     }
 
     function MyMessage(msg, devices) {
