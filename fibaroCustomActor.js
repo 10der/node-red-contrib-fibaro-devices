@@ -8,7 +8,7 @@ module.exports = function (RED) {
             this.customActions = n.payload ? JSON.parse(n.payload) : {};
         }
 
-        onInput(msg) {
+        onEvent(msg) {
             this.node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
             setTimeout(() => {
                 this.node.status({});
@@ -32,7 +32,7 @@ module.exports = function (RED) {
             }
         }
 
-        onEvent(msg) {
+        onInput(msg) {
             this.node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
             setTimeout(() => {
                 this.node.status({});
