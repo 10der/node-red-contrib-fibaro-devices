@@ -39,7 +39,7 @@ module.exports = function (RED) {
                 this.fibaro.queryDevices(deviceID, (currentState) => {
                     msg.currentState = currentState;
                     if (this.resultToPayload) {
-                        msg.payload = currentState.value;
+                        msg.payload = currentState;
                     }
                     this.node.send(msg);
                     this.node.status({});
