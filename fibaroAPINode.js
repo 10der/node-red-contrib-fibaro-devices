@@ -50,11 +50,49 @@ module.exports = function (RED) {
                         fibaro.devices = devices;
                         node.send([null, { topic: "/devices", payload: devices }]);
                         node.initialized = true;
-                        fibaro.isReady = true;
+                        fibaro.isReady = true;                        
                     }, (e) => node.error(e))
                 }, (e) => node.error(e))
             }, (e) => node.error(e))
             node.status({ fill: "green", shape: "dot", text: "connected" });
+        });
+
+        fibaro.on('nodeAdded', function (item) {
+            var target = RED.nodes.getNode(item.nodeId);
+            if (target) {
+                var orgDeviceID = fibaro.translateDeviceID(item.deviceID);
+                fibaro.sendRequest("/devices/" + orgDeviceID,
+                    (dev) => {
+                        var currentState = dev.properties;
+                        if (typeof currentState.value !== 'undefined') {
+                            let event = {};
+                            event.topic = `${item.deviceID}`;
+                            event.payload = currentState.value;
+                            target.emit('event', event);
+
+                            // passthrough
+                            if (config.outputs > 0) {
+                                let msg = {
+                                    topic: "DevicePropertyUpdatedEvent",
+                                    payload: {
+                                        id: nicknames ? fibaro.translateDeviceID(orgDeviceID, true) : orgDeviceID,
+                                        property: "value",
+                                        oldValue: null, // statup
+                                        newValue: currentState.value,
+                                    }
+                                }
+                                node.send(msg);
+                            }
+                        }
+                    },
+                    (err) => {
+                        console.debug(err);
+                    });
+            } else {
+                console.debug(`node not found: ${item.nodeId}`);
+            }
+            //console.debug(nodeId)
+            //console.debug(deviceID)
         });
 
         fibaro.on('failed', function (error) {
@@ -170,46 +208,6 @@ module.exports = function (RED) {
             node.send([null, msg]);
         });
 
-        var initializeDevices = function () {
-            fibaro.nodes.filter(o => !o.initialized).forEach(item => {
-                // console.debug(`init node: ${item.nodeId} with device: ${item.deviceID}`);
-                var target = RED.nodes.getNode(item.nodeId);
-                if (target) {
-                    var orgDeviceID = fibaro.translateDeviceID(item.deviceID);
-                    fibaro.sendRequest("/devices/" + orgDeviceID,
-                        (dev) => {
-                            var currentState = dev.properties;
-                            if (typeof currentState.value !== 'undefined') {
-                                let event = {};
-                                event.topic = `${item.deviceID}`;
-                                event.payload = currentState.value;
-                                target.emit('event', event);
-
-                                // passthrough
-                                if (config.outputs > 0) {
-                                    let msg = {
-                                        topic: "DevicePropertyUpdatedEvent",
-                                        payload: {
-                                            id: nicknames ? fibaro.translateDeviceID(orgDeviceID, true) : orgDeviceID,
-                                            property: "value",
-                                            oldValue: null, // statup
-                                            newValue: currentState.value,
-                                        }
-                                    }
-                                    node.send(msg);
-                                }
-                            }
-                        },
-                        (err) => {
-                            console.debug(err);
-                        });
-                    item.initialized = true;
-                } else {
-                    console.debug(`node not found: ${item.nodeId}`);
-                }
-            });
-        }
-
         // node control
         node.on('input', function (msg) {
             if (!node.initialized) {
@@ -218,9 +216,6 @@ module.exports = function (RED) {
 
             // is mqtt message?
             if (msg.mqtt) {
-                // initialize devices (if needed)
-                initializeDevices();
-
                 // parse evenets
                 var updates = msg.payload;
                 if (updates.events != undefined) {
@@ -248,9 +243,6 @@ module.exports = function (RED) {
             if (!node.initialized) {
                 return
             }
-            // initialize devices (if needed)
-            initializeDevices();
-
             // just call poll for a new events
             fibaro.poll();
         }

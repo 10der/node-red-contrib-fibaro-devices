@@ -49,6 +49,8 @@ FibaroAPI.prototype.validateConfig = function validateConfig() {
 
 FibaroAPI.prototype.addDevice = function addDevice(nodeId, deviceID) {
     this.nodes.push({ nodeId: nodeId, deviceID: String(deviceID), initialized: false });
+    var _api = this;
+    _api.emit('nodeAdded', { nodeId, deviceID });
 }
 
 FibaroAPI.prototype.removeDevice = function removeDevice(nodeId) {
