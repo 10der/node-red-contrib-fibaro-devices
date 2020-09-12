@@ -9,23 +9,19 @@ module.exports = function (RED) {
             this.devices = [];
             try {
                 this.devices = JSON.parse(`[${n.devices}]`);
+                this.devices.forEach(deviceID => {
+                    if (deviceID != 0) {
+                        this.fibaro.addDevice(n.id, String(deviceID));
+                    }
+                });
             } catch (err) {
                 // nothing
             }
-
-            this.devices.forEach(deviceID => {
-                if (deviceID != 0) {
-                    this.fibaro.addDevice(n.id, String(deviceID));
-                }
-            });
         }
 
         // respond to inputs....
         onInput(msg) {
             if (msg.topic === 'init') {
-                if (this.devices) {
-                    return;
-                }
 
                 let payload = msg.payload;
                 try {
