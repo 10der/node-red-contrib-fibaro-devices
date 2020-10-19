@@ -40,7 +40,6 @@ module.exports = function (RED) {
                 this.fibaro.callAPI("callAction", { deviceID: deviceID, name: "setValue", arg1: payload });
             } else if (typeof payload === 'string') {
                 // callAction name as string
-                payload.deviceID = deviceID
                 this.fibaro.callAPI("callAction", { deviceID: deviceID, name: payload });
             } else if (typeof payload === 'object') {
                 payload.deviceID = deviceID
