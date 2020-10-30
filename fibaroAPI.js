@@ -75,6 +75,7 @@ FibaroAPI.prototype.createRequest = function createRequest(query) {
         url: url,
         options: {
             method: 'GET',
+            timeout: 2000,
             headers: {
                 'Content-Type': 'application/json',
                 "Authorization": "Basic " + make_base_auth(user, pass),
@@ -149,6 +150,7 @@ FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
     }
 
     const request = this.createRequest(query);
+
     const options = request.options;
     fetch(request.url, options)
         .then(checkStatus)
