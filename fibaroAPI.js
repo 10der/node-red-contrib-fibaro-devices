@@ -75,7 +75,7 @@ FibaroAPI.prototype.createRequest = function createRequest(query) {
         url: url,
         options: {
             method: 'GET',
-            timeout: 2000,
+            timeout: 5000,
             headers: {
                 'Content-Type': 'application/json',
                 "Authorization": "Basic " + make_base_auth(user, pass),
