@@ -75,7 +75,7 @@ FibaroAPI.prototype.createRequest = function createRequest(query) {
         url: url,
         options: {
             method: 'GET',
-            timeout: 5000,
+            // timeout: 5000,
             headers: {
                 'Content-Type': 'application/json',
                 "Authorization": "Basic " + make_base_auth(user, pass),
@@ -86,52 +86,6 @@ FibaroAPI.prototype.createRequest = function createRequest(query) {
 
     return request;
 }
-/*
-const fetchWithRetry = (url, numberOfRetry, fetchOptions = {}) => {
-    return new Promise((resolve, reject) => {
-        let attempts = 1;
-
-        const fetch_retry = (url, n, fetchOptions) => {
-
-            return fetch(url, fetchOptions).then(res => {
-
-                const status = res.status;
-
-                if (status === 200) {
-                    return resolve(res);
-                }
-                else if (n === 1) {
-                    throw reject("Error in getting http data");
-                }
-                else {
-                    console.log("Retry again: Got back " + status);
-                    console.log("With delay " + attempts * 3000);
-                    setTimeout(() => {
-                        attempts++;
-
-                        fetch_retry(url, n - 1);
-                    }, attempts * 3000);
-                }
-            }).catch(function (error) {
-                if (n === 1) {
-                    reject(error)
-                }
-                else {
-                    setTimeout(() => {
-                        attempts++
-                        fetch_retry(url, n - 1);
-                    }, attempts * 3000);
-                }
-            });
-        }
-        return fetch_retry(url, numberOfRetry);
-    });
-}
-*/
-
-// fetchWithRetry("https://httpbin.org/status/200,408", 3).then(x => console.log("Finally " + x.status)).catch(e => {
-//     console.log(e);
-// });
 
 FibaroAPI.prototype.sendRequest = function sendRequest(query, callback, error) {
     var _api = this;
@@ -305,20 +259,6 @@ FibaroAPI.prototype.translateDeviceID = function translateDeviceID(deviceID, dir
     }
 }
 
-// _api.sendRequest(`/devices/?name=${encodeURIComponent(name)}&roomID=${encodeURIComponent(roomID)}`,
-// (data) => {
-//     if (data.length == 1) {
-//         return data[0].id;
-//     } else {
-//         console.error('Cannot be translated: ', nodeId, deviceID);
-//         return;
-//     }
-// },
-// (error) => {
-//     console.debug('error', { text: `device data error: ${error.code}`, error: error });
-// }
-// );
-
 FibaroAPI.prototype.pollDevices = function pollDevices() {
     var _api = this;
 
@@ -396,10 +336,10 @@ FibaroAPI.prototype.pollGlobals = function pollGlobals() {
 FibaroAPI.prototype.poll = function poll() {
     var _api = this;
     _api.pollDevices();
-    _api.pollGlobals();
+    // _api.pollGlobals();
 }
 
-FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
+FibaroAPI.prototype.callAPI = function callAPI(methodName, args, callback) {
     var _api = this;
 
     if (!_api.validateConfig()) {
@@ -423,8 +363,12 @@ FibaroAPI.prototype.callAPI = function callAPI(methodName, args) {
                 var msg = {};
                 msg.topic = url;
                 msg.payload = data;
-                _api.emit('data', msg);
-                // console.debug(msg);
+                if (callback) {
+                    callback(msg);
+                } else {
+                    _api.emit('data', msg);
+                    // console.debug(msg);
+                }
             },
             (error) => {
                 _api.emit('error', { text: `error: ${error}`, error: error });
@@ -517,12 +461,5 @@ class FibaroError extends Error {
         this.text = error.text;
     }
 }
-// FibaroAPI.prototype.getRoomByDeviceID = function getRoomByDeviceID(deviceID) {
-//     const device = this.devices.find(o => o.id == deviceID);
-//     if (device) {
-//         return device.roomID;
-//     }
-//     return 0;
-// }
 
 module.exports = FibaroAPI;

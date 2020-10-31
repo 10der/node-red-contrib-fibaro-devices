@@ -35,6 +35,11 @@ module.exports = function (RED) {
                     this.node.send(msg);
                     this.node.status({});
                 }, (error) => this.node.status({ fill: "red", shape: "dot", text: error.text }));
+            } else if (msg.api) {
+                this.fibaro.callAPI(msg.topic, {}, (msg) => {
+                    this.node.send(msg);
+                    this.node.status({});
+                });
             } else if (deviceID.includes("=")) {
                 this.fibaro.queryDevices(deviceID, (currentState) => {
                     msg.currentState = currentState;
