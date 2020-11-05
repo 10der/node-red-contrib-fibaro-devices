@@ -64,6 +64,34 @@ module.exports = function (RED) {
                 fibaro.sendRequest("/devices/" + orgDeviceID,
                     (dev) => {
                         var currentState = dev.properties;
+                        if (target.customProperties) {
+                            var index;
+                            for (index = 0; index < target.customProperties.length; ++index) {
+                                var value = currentState[target.customProperties[index]];
+                                let event = {};
+                                event.topic = `${item.deviceID}`;
+                                event.payload = {
+                                    property: target.customProperties[index],
+                                    value: value,        
+                                };  
+                                target.emit('event', event);
+
+                                // passthrough
+                                if (config.outputs > 0) {   
+                                    let msg = {
+                                        topic: "DevicePropertyUpdatedEvent",
+                                        payload: {
+                                            id: nicknames ? fibaro.translateDeviceID(orgDeviceID, true) : orgDeviceID,
+                                            property: target.customProperties[index],
+                                            oldValue: null, // statup
+                                            newValue: value,
+                                        }
+                                    }
+                                    node.send(msg);
+                                }
+                            }
+                        }
+
                         if (typeof currentState.value !== 'undefined') {
                             let event = {};
                             event.topic = `${item.deviceID}`;

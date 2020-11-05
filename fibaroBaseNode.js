@@ -35,6 +35,7 @@ class BaseNode {
                     // register device
                     if (node.deviceID != 0) {
                         node.fibaro.addDevice(node.id, node.deviceID);
+                        node.onInit();
                     }
                 }
                 if (node.fibaro.isReady) { doit(); }
@@ -48,6 +49,7 @@ class BaseNode {
             this.node.running = false;
         });        
     }
+    onInit() {}
     onInput() {}
     onEvent() {}
 }

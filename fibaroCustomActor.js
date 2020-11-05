@@ -6,6 +6,10 @@ module.exports = function (RED) {
             super(n, RED);
             this.events = n.events;
             this.customActions = n.payload ? JSON.parse(n.payload) : {};
+            this.customProperties = n.payload ? JSON.parse(n.properties) : {};
+        }
+
+        onInit() {
         }
 
         onEvent(msg) {
