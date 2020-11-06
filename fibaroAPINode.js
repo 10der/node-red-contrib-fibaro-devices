@@ -200,9 +200,12 @@ module.exports = function (RED) {
                 event.payload = { property: topic, value: payload };
                 // console.debug(event);
                 sendEvent(event.topic, event);
-            }
-            else if (topic == "GlobalVariableUpdatedEvent") {
-                // nothing todo
+            }   
+            else if (topic == "GlobalVariableChangedEvent") {
+                let event = {};
+                event.topic = "GlobalVariableUpdatedEvent";
+                event.payload = payload;
+                sendEvent(event.topic, event);
             }
 
             // passthrough
