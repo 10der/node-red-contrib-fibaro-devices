@@ -163,7 +163,7 @@ FibaroAPI.prototype.init = function init() {
     _api.fibaroInit(() => {
         _api.emit('connected', {});
     }, (e) => {
-        _api.emit('failed', { text: "HC intialization failed", error: e });
+        _api.emit('failed', { text: "HC initialization failed", error: e });
     })
 }
 
@@ -331,12 +331,6 @@ FibaroAPI.prototype.pollGlobals = function pollGlobals() {
         (error) => {
             _api.emit('error', { text: `poll globalVariables data error: ${error.code}`, error: error });
         });
-}
-
-FibaroAPI.prototype.poll = function poll() {
-    var _api = this;
-    _api.pollDevices();
-    // _api.pollGlobals();
 }
 
 FibaroAPI.prototype.callAPI = function callAPI(methodName, args, callback) {

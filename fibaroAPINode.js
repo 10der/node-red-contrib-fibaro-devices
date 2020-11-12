@@ -35,11 +35,15 @@ module.exports = function (RED) {
 
         const defaultPollerPeriod = 1;
         let pollerPeriod = config.pollingInterval ? parseInt(config.pollingInterval) : defaultPollerPeriod;
+        let globalsPollerPeriod = config.globalsPollingInterval ? parseInt(config.globalsPollingInterval) : defaultPollerPeriod;
         if (isNaN(pollerPeriod) || pollerPeriod < 0 || pollerPeriod > 10) {
             pollerPeriod = defaultPollerPeriod;
         }
+        if (isNaN(globalsPollerPeriod) || globalsPollerPeriod < 0 || globalsPollerPeriod > 10) {
+            globalsPollerPeriod = defaultPollerPeriod;
+        }
 
-        // Fibaro API evensts
+        // Fibaro API events
         fibaro.on('connected', function () {
             fibaro.sendRequest("/sections", function (sections) {
                 node.send([null, { topic: "/sections", payload: sections }]);
@@ -272,11 +276,18 @@ module.exports = function (RED) {
 
         var poll = function () {
             if (!node.initialized) {
-                return
+                return;
             }
             // just call poll for a new events
-            fibaro.poll();
-        }
+            fibaro.pollDevices();
+        };
+
+        var globalPoll = function () {
+            if (!node.initialized) {
+                return;
+            }
+            fibaro.pollGlobals();
+        };
 
         // init Fibaro connect
         node.status({ fill: 'yellow', shape: 'ring', text: 'connection...' });
@@ -288,9 +299,16 @@ module.exports = function (RED) {
                 poll();
             }, pollerPeriod * 1000);
         }
+        if (this.globalPoller) { clearTimeout(this.globalPoller); }
+        if (globalsPollerPeriod > 0) {
+            this.globalPoller = setInterval(function () {
+                globalPoll();
+            }, globalsPollerPeriod * 1000);
+        }
 
         this.on("close", function () {
             if (this.poller) { clearTimeout(this.poller); }
+            if (this.globalPoller) { clearTimeout(this.globalPoller); }
             if (fibaro != null) {
                 fibaro.removeAllListeners();
             }

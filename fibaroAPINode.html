@@ -6,6 +6,7 @@
             name: { value: "" },
             server: { type: "fibaro-server", required: true },
             pollingInterval: { value: "1000", validate: function (v) { return ((v === undefined) || (/^\d+$/).test(v)); } },
+            globalsPollingInterval: { value: "1000", validate: function (v) { return ((v === undefined) || (/^\d+$/).test(v)); } },
             passthrough: { value: false },
             outputs: { value: 0 },
             nicknames: { value: false }
@@ -28,6 +29,16 @@
             }
 
             $("#node-input-pollingInterval").spinner({ min: 0, max: 10 });
+
+            if (!$("#node-input-globalsPollingInterval").val()) {
+                $("#node-input-globalsPollingInterval").val(1);
+            }
+
+            if ($("#node-input-globalsPollingInterval").val() > 10) {
+                $("#node-input-globalsPollingInterval").val(1);
+            }
+
+            $("#node-input-globalsPollingInterval").spinner({ min: 0, max: 10 });
         },
         oneditsave: function () {
             var node = this;
@@ -39,6 +50,10 @@
 
             if (!$("#node-input-pollingInterval").val()) {
                 $("#node-input-pollingInterval").val(1);
+            }
+
+            if (!$("#node-input-globalsPollingInterval").val()) {
+                $("#node-input-globalsPollingInterval").val(1);
             }
         }
     });
@@ -57,8 +72,14 @@
     </div>
       
     <div class="form-row">
-        <label for="node-input-pollingInterval"><i class="fa fa-clock-o"></i> Polling interval</label>
+        <label for="node-input-pollingInterval"><i class="fa fa-clock-o"></i> refreshStates polling interval</label>
         <input type="text" id="node-input-pollingInterval" placeholder="Duration" style="text-align:end; width:50px !important">
+        seconds
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-globalsPollingInterval"><i class="fa fa-clock-o"></i> globals polling interval</label>
+        <input type="text" id="node-input-globalsPollingInterval" placeholder="Duration" style="text-align:end; width:50px !important">
         seconds
     </div>
 
@@ -69,7 +90,7 @@
 
     <div class="form-row">
         <input type="checkbox" id="node-input-nicknames" style="display:inline-block; width: auto; vertical-align:baseline;">
-        <label for="node-input-nicknames" style="width: 70%;">roomName/deviceName vise ID in output</label>
+        <label for="node-input-nicknames" style="width: 70%;">roomName/deviceName instead of deviceID in output</label>
     </div>
 </script>
 
