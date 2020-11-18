@@ -333,10 +333,14 @@ FibaroAPI.prototype.pollGlobals = function pollGlobals() {
         });
 }
 
-FibaroAPI.prototype.poll = function poll() {
+FibaroAPI.prototype.poll = function poll(onlyGlobals) {
     var _api = this;
+    if (onlyGlobals)   {
+        _api.pollGlobals();
+        return;
+    }
     _api.pollDevices();
-    // _api.pollGlobals();
+    _api.pollGlobals();
 }
 
 FibaroAPI.prototype.callAPI = function callAPI(methodName, args, callback) {
