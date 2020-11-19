@@ -11,11 +11,6 @@ module.exports = function (RED) {
             // it's my own message
             if (msg.passthrough) return;
 
-            this.node.status({ fill: 'yellow', shape: 'ring', text: 'in' });
-            setTimeout(() => {
-                this.node.status({ fill: 'gray', shape: 'ring', text: `${this.currentStatus}` });
-            }, 1000);
-
             var deviceID = this.deviceID;
             if (this.deviceID == 0) {
                 deviceID = String(msg.topic);
@@ -51,8 +46,6 @@ module.exports = function (RED) {
         }
 
         onEvent(msg) {
-            this.node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
-
             var event = {};
             event.topic = String(this.deviceID);
             if (this.deviceID == 0) {
@@ -71,11 +64,9 @@ module.exports = function (RED) {
             }
 
             if (typeof event.payload === 'object') {
-                // this.node.status({});
             } else {
-                this.currentStatus = event.payload;
+                this.node.status({ fill: 'gray', shape: 'ring', text: `${event.payload}` });
             }
-            this.node.status({ fill: 'gray', shape: 'ring', text: `${this.currentStatus}` });
         }
     }
 

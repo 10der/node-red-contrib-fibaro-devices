@@ -17,13 +17,10 @@ module.exports = function (RED) {
             try { event.payload = JSON.parse(event.payload); } // obj
             catch (e) {/* */ }
             if (typeof event.payload === 'object') {
-                this.node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
             } else {
                 let value = event.payload;
                 this.node.send([event, null]);
-                setTimeout(() => {
-                    this.node.status({ fill: 'green', shape: 'ring', text: `${value}` });
-                }, 1000);
+                this.node.status({ fill: 'green', shape: 'ring', text: `${value}` });
             }
         }
     }

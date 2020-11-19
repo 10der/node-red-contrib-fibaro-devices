@@ -13,11 +13,6 @@ module.exports = function (RED) {
         }
 
         onEvent(msg) {
-            this.node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
-            setTimeout(() => {
-                this.node.status({});
-            }, 1000);
-
             if (this.events) {
                 var event = {};
                 event.topic = String(this.deviceID);
@@ -33,15 +28,11 @@ module.exports = function (RED) {
                 } else {
                     this.node.send([event, null]);
                 }
+                this.node.status({ fill: 'gray', shape: 'ring', text: `${event.payload}` });
             }
         }
 
         onInput(msg) {
-            this.node.status({ fill: 'yellow', shape: 'ring', text: 'event' });
-            setTimeout(() => {
-                this.node.status({});
-            }, 1000);
-
             var deviceID = this.deviceID;
             if (this.deviceID == 0) {
                 deviceID = String(msg.topic);
