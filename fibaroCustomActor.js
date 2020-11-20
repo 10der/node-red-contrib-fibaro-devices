@@ -28,7 +28,17 @@ module.exports = function (RED) {
                 } else {
                     this.node.send([event, null]);
                 }
-                this.node.status({ fill: 'gray', shape: 'ring', text: `${event.payload}` });
+                if (typeof event.payload === 'object') {
+                    var n = this.customProperties.includes(event.payload.property);
+                    if (n) {
+                        this.node.status({ fill: 'gray', shape: 'ring', text: `${event.payload.property}|${event.payload.value}`});
+                    }
+                    else {
+                        this.node.status({ fill: 'gray', shape: 'ring', text: `${"command"}` });
+                    }
+                } else {
+                    this.node.status({ fill: 'gray', shape: 'ring', text: `${event.payload}` });
+                }
             }
         }
 

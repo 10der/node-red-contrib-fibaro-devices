@@ -14,7 +14,8 @@ class BaseNode {
             // TODO
         }
         this.node.status({});        
-
+        this.initialized = false;
+        
         var node = this;
         node.running = false;
         if (typeof this.serverConfig === "object") {

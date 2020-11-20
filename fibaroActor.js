@@ -46,6 +46,15 @@ module.exports = function (RED) {
         }
 
         onEvent(msg) {
+            if (this.initialized) {
+                if (msg.init) {
+                    // do NOT!
+                    return;
+                }
+            } else {
+                this.initialized = true;
+            }
+
             var event = {};
             event.topic = String(this.deviceID);
             if (this.deviceID == 0) {

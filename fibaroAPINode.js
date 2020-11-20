@@ -76,6 +76,7 @@ module.exports = function (RED) {
                             var value = currentState[target.customProperties[index]];
                             let event = {};
                             event.topic = `${item.deviceID}`;
+                            event.init = true;
                             event.payload = {
                                 property: target.customProperties[index],
                                 value: value,
@@ -101,6 +102,7 @@ module.exports = function (RED) {
                     if (typeof currentState.value !== 'undefined') {
                         let event = {};
                         event.topic = `${item.deviceID}`;
+                        event.init = true;
                         event.payload = currentState.value;
                         target.emit('event', event);
 
@@ -200,7 +202,7 @@ module.exports = function (RED) {
             }
             else if (topic == "CentralSceneEvent") {
                 let event = {};
-                event.topic = `${payload.deviceId}`;
+                event.topic = `${payload.deviceId || payload.id}`;
                 event.payload = { property: topic, value: payload };
                 // console.debug(event);
                 sendEvent(event.topic, event);
@@ -222,7 +224,7 @@ module.exports = function (RED) {
                         }
                     }
                     if (topic == "CentralSceneEvent") {
-                        let nicknameID = fibaro.translateDeviceID(msg.payload.id, true);
+                        let nicknameID = fibaro.translateDeviceID(payload.deviceId || payload.id, true);
                         if (nicknameID) {
                             msg.payload.deviceId = nicknameID;
                         }
