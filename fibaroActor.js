@@ -73,6 +73,7 @@ module.exports = function (RED) {
             }
 
             if (typeof event.payload === 'object') {
+                // nothing todo
             } else {
                 this.node.status({ fill: 'gray', shape: 'ring', text: `${event.payload}` });
             }

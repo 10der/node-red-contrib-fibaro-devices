@@ -25,6 +25,7 @@ module.exports = function (RED) {
             try { event.payload = JSON.parse(event.payload); } // obj
             catch (e) {/* */ }
             if (typeof event.payload === 'object') {
+                // nothing todo
             } else {
                 let value = event.payload;
                 this.node.send([event, null]);

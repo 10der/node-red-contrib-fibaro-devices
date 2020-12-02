@@ -44,7 +44,7 @@ FibaroAPI.prototype.validateConfig = function validateConfig() {
     if (!hasIpAddress) {
         return false;
     }
-    return true;    
+    return true;
 }
 
 FibaroAPI.prototype.addDevice = function addDevice(nodeId, deviceID) {
@@ -192,15 +192,17 @@ FibaroAPI.prototype.translateDeviceID = function translateDeviceID(deviceID, dir
                 } else {
                     return device.name;
                 }
+            } else {
+                // _api.emit('warn', { text: `Cannot be translated to nickname: ${deviceID}` });
+                // console.error('Cannot be translated to nickname: ', deviceID);
+                // return null;
+                return deviceID;
             }
-            _api.emit('warn', { text: `Cannot be translated to nickname: ${deviceID}` });
-            console.error('Cannot be translated to nickname: ', deviceID);
-            return null;
         } else {
             return deviceID;
         }
     } else {
-        if (isNaN(deviceID)) {            
+        if (isNaN(deviceID)) {
             if (_api.devices.length === 0) {
                 // not initialized yet!
                 // var fres = deviceID.split("/");
@@ -335,7 +337,7 @@ FibaroAPI.prototype.pollGlobals = function pollGlobals() {
 
 FibaroAPI.prototype.poll = function poll(onlyGlobals) {
     var _api = this;
-    if (onlyGlobals)   {
+    if (onlyGlobals) {
         _api.pollGlobals();
         return;
     }
