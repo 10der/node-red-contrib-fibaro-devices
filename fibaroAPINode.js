@@ -63,7 +63,7 @@ module.exports = function (RED) {
                 var orgDeviceID = fibaro.translateDeviceID(item.deviceID);
                 var initDeviceValues = function () {
                     var dev = fibaro.devices.find(obj => {
-                        return obj.id === orgDeviceID
+                        return obj.id == orgDeviceID
                     })
                     if (typeof dev == 'undefined') {
                         // device NOT FOUND?!

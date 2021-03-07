@@ -1,10 +1,19 @@
 {
   "version": "2.0.0",
+  "command": "npm",
   "tasks": [
     {
-      "label": "node-red",
+      "group": "build",
       "type": "shell",
-      "command": "node-red"
+      "label": "lint",
+      "args": [
+        "run",
+        "lint",
+        "-- --fix"
+      ],
+      "problemMatcher": [
+        "$eslint-stylish"
+      ]
     }
   ]
 }
