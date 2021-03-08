@@ -42,7 +42,15 @@ module.exports = function (RED) {
                 }
                 this.devices.forEach(deviceID => {
                     if (deviceID != 0) {
-                        this.fibaro.addDevice(this.id, String(deviceID));
+                        var dev = this.fibaro.devices.find(obj => {
+                            return obj.id == deviceID
+                        });
+                        if (dev) {
+                            this.fibaro.queryState(deviceID, "value", (cState) => {
+                                dev.properties.value = cState.value;
+                                this.fibaro.addDevice(this.id, String(deviceID));
+                           });
+                        }
                     }
                 });
             }
