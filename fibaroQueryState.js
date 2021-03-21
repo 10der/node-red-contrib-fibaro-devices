@@ -56,11 +56,11 @@ module.exports = function (RED) {
                 var property = msg.property || 'value';
                 this.fibaro.queryState(deviceID, property, (currentState) => {
                     msg.currentState = currentState;
-                    if (property == "value") {
+                    //if (property == "value") {
                         if (this.resultToPayload) {
                             msg.payload = currentState.value;
                         }
-                    }
+                    //}
                     this.node.send(msg);
                     this.node.status({});
                 }, (error) => this.node.status({ fill: "red", shape: "dot", text: error.text }));
